@@ -725,7 +725,7 @@ console.log(Object.getPrototypeOf(anya) === Hero.prototype);</textarea>
 
 <section class="slide" data-quiz data-sec="prototype">
   <h2 class="sr">Квиз · своё свойство</h2>
-  <script type="application/json">{"key": "q1", "question": "Что выведет?", "code": "class A {\n  constructor() { this.x = 1; }\n  hi() { return 'hi'; }\n}\nconst a = new A();\nconsole.log(a.hasOwnProperty('x'), a.hasOwnProperty('hi'));", "options": ["true true", "true false", "false true", "false false"], "correct": 1, "time": 25}</script>
+  <script type="application/json">{"key": "q1", "question": "Что выведет?", "code": "class A {\n  constructor() { this.x = 1; }\n  hi() { return 'hi'; }\n}\nconst a = new A();\nconsole.log(a.hasOwnProperty('x'), a.hasOwnProperty('hi'));", "options": ["true true", "true false", "false true", "false false"], "correct": 1, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">▶ Старт — таймер, G — следующий шаг. x — своё свойство объекта (создано в конструкторе). hi — метод, он лежит в A.prototype, а не в самом объекте → true false.</aside>
 </section>
@@ -813,14 +813,14 @@ console.log(new Mage('Мерлин', 10, 50).info());</textarea>
 
 <section class="slide" data-quiz data-sec="Наследование">
   <h2 class="sr">Квиз · забыли super</h2>
-  <script type="application/json">{"key": "q2", "question": "Что будет?", "code": "class Hero {\n  constructor(name) { this.name = name; }\n}\nclass Mage extends Hero {\n  constructor(name, mana) {\n    this.mana = mana;\n  }\n}\nnew Mage('Мерлин', 50);", "options": ["Mage { mana: 50 }", "Mage { name: undefined, mana: 50 }", "ReferenceError", "Ничего, всё ок"], "correct": 2, "time": 25}</script>
+  <script type="application/json">{"key": "q2", "question": "Что будет?", "code": "class Hero {\n  constructor(name) { this.name = name; }\n}\nclass Mage extends Hero {\n  constructor(name, mana) {\n    this.mana = mana;\n  }\n}\nnew Mage('Мерлин', 50);", "options": ["Mage { mana: 50 }", "Mage { name: undefined, mana: 50 }", "ReferenceError", "Ничего, всё ок"], "correct": 2, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">В конструкторе ребёнка this появляется только после super(...). Без него — ReferenceError: Must call super constructor before accessing 'this'. Самая частая ошибка шага 1 практики.</aside>
 </section>
 
 <section class="slide" data-quiz data-sec="Наследование">
   <h2 class="sr">Квиз · instanceof</h2>
-  <script type="application/json">{"key": "q3", "question": "Что выведет?", "code": "class A {}\nclass B extends A {}\nconst a = new A();\nconst b = new B();\nconsole.log(b instanceof A, a instanceof B);", "options": ["true true", "true false", "false true", "false false"], "correct": 1, "time": 20}</script>
+  <script type="application/json">{"key": "q3", "question": "Что выведет?", "code": "class A {}\nclass B extends A {}\nconst a = new A();\nconst b = new B();\nconsole.log(b instanceof A, a instanceof B);", "options": ["true true", "true false", "false true", "false false"], "correct": 1, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">Каждый B — это A (маг — тоже герой) → true. Но не каждый A — это B (не каждый герой маг) → false.</aside>
 </section>
@@ -860,7 +860,7 @@ for (const animal of zoo) {
 <section class="slide" data-sec="Полиморфизм" data-motion-battle style="gap:24px"><div class="between a"><h2 style="font-size:50px">Одна атака. Два режима. 🔥</h2><span class="pill">предскажите третий удар</span></div><div class="battle"><div class="fighter mage"><span class="avatar">🧙</span><h3>Мерлин · Mage</h3><p class="battle-stats">power 10 · mana <span data-mana>20</span></p><p>attack(enemy)</p></div><div class="battle-vs">VS</div><div class="fighter dragon"><span class="avatar">🐉</span><h3>Манекен-дракон</h3><div class="hp-shell"><div class="hp-fill"></div></div><p class="battle-stats">hp <span data-hp>100</span> / 100</p></div></div><p class="battle-report">Один вызов attack(). Пока есть мана — огонь, потом обычный удар.</p><div class="battle-action"><button data-battle-attack>merlin.attack(dragon) 🔥</button><button class="ghost" data-battle-reset>↺ Новый раунд</button></div><aside class="notes">Два нажатия: огонь, по 20 урона и -10 маны. Третье: мана закончилась, super.attack наносит 10. Кнопка заблокирована до конца анимации. Это наглядная модель Mage.attack из практики.</aside></section>
 <section class="slide" data-quiz data-sec="Полиморфизм">
   <h2 class="sr">Квиз · полиморфизм</h2>
-  <script type="application/json">{"key": "q4", "question": "Что выведет цикл?", "code": "class Shape { area() { return 0; } }\nclass Square extends Shape {\n  constructor(a) { super(); this.a = a; }\n  area() { return this.a * this.a; }\n}\nfor (const s of [new Square(3), new Shape()]) {\n  console.log(s.area());\n}", "options": ["9 и 9", "9 и 0", "0 и 0", "TypeError"], "correct": 1, "time": 25}</script>
+  <script type="application/json">{"key": "q4", "question": "Что выведет цикл?", "code": "class Shape { area() { return 0; } }\nclass Square extends Shape {\n  constructor(a) { super(); this.a = a; }\n  area() { return this.a * this.a; }\n}\nfor (const s of [new Square(3), new Shape()]) {\n  console.log(s.area());\n}", "options": ["9 и 9", "9 и 0", "0 и 0", "TypeError"], "correct": 1, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">У Square свой area → 9. У простого Shape — родительский → 0. Один вызов s.area(), два разных ответа.</aside>
 </section>
@@ -951,14 +951,14 @@ for (const gold of [25, 3]) {
 
 <section class="slide" data-quiz data-sec="Исключения">
   <h2 class="sr">Квиз · порядок finally</h2>
-  <script type="application/json">{"key": "q5", "question": "Что выведет?", "code": "try {\n  console.log(1);\n  throw new Error('x');\n  console.log(2);\n} catch (e) {\n  console.log(3);\n} finally {\n  console.log(4);\n}", "options": ["1 2 3 4", "1 3 4", "1 4", "1 3"], "correct": 1, "time": 25}</script>
+  <script type="application/json">{"key": "q5", "question": "Что выведет?", "code": "try {\n  console.log(1);\n  throw new Error('x');\n  console.log(2);\n} catch (e) {\n  console.log(3);\n} finally {\n  console.log(4);\n}", "options": ["1 2 3 4", "1 3 4", "1 4", "1 3"], "correct": 1, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">После throw остаток try пропускается (2 не будет) → catch (3) → finally (4). Ответ: 1 3 4.</aside>
 </section>
 
 <section class="slide" data-quiz data-sec="Исключения">
   <h2 class="sr">Квиз · имя ошибки</h2>
-  <script type="application/json">{"key": "q6", "question": "Что выведет?", "code": "class GameError extends Error {\n  constructor(m) { super(m); this.name = 'GameError'; }\n}\ntry {\n  throw new GameError('Мало маны');\n} catch (e) {\n  console.log(e.name, e instanceof Error);\n}", "options": ["Error true", "GameError true", "GameError false", "undefined false"], "correct": 1, "time": 25}</script>
+  <script type="application/json">{"key": "q6", "question": "Что выведет?", "code": "class GameError extends Error {\n  constructor(m) { super(m); this.name = 'GameError'; }\n}\ntry {\n  throw new GameError('Мало маны');\n} catch (e) {\n  console.log(e.name, e instanceof Error);\n}", "options": ["Error true", "GameError true", "GameError false", "undefined false"], "correct": 1, "time": 60}</script>
   <div data-quiz-box style="flex:1;display:flex;flex-direction:column;min-height:0"></div>
   <aside class="notes">name задали сами → 'GameError'. GameError наследуется от Error → instanceof Error true. Так в практике мы отличим «игровые» ошибки от остальных.</aside>
 </section>
@@ -4844,7 +4844,7 @@ trigger.onclick=async()=>{await window.classroomIdentity.ready;show();if(auth){r
 if(auth)beginPolling();
 const finishButton=document.createElement('button');finishButton.className='btn';finishButton.textContent='🏆 Завершить занятие и показать лидерборд';finishButton.onclick=finishSession;L.slides.at(-1).insertBefore(finishButton,L.slides.at(-1).querySelector('aside.notes'));
 
-async function command(action,quiz,status){if(!auth){show();$('.live-content',panel).textContent='Сначала нажмите «QR / участники» и создайте комнату.';return false;}try{await api(action,{quiz});if(status)status.textContent=action==='start'?'Вопрос на телефонах · 25 секунд':'Ответ раскрыт';refresh();return true;}catch(e){if(status)status.textContent=e.message;else{show();$('.live-content',panel).textContent=e.message;}return false;}}
+async function command(action,quiz,status){if(!auth){show();$('.live-content',panel).textContent='Сначала нажмите «QR / участники» и создайте комнату.';return false;}try{await api(action,{quiz});if(status)status.textContent=action==='start'?'Вопрос на телефонах · 60 секунд':'Ответ раскрыт';refresh();return true;}catch(e){if(status)status.textContent=e.message;else{show();$('.live-content',panel).textContent=e.message;}return false;}}
 const quizzes=$$('section[data-quiz]');quizzes.forEach((q,i)=>{
  const live=q.querySelector('.lq');let prev=false,started=false;
  // Наблюдаем состояние движка: работает и кнопка, и клавиша G.

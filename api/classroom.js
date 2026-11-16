@@ -53,7 +53,7 @@ async function handler(req,res){res.setHeader('Cache-Control','no-store');try{
   if(state.phase==='ended')fail('Сессия завершена.',410);
   if(action==='end'){await updateRoom(room,{phase:'ended'});return res.status(200).json({ok:true});}
   const quiz=body.quiz;if(!Number.isInteger(quiz)||!quizzes[quiz])fail('Неизвестный квиз.');
-  if(action==='start'){const round=token().slice(0,12);await updateRoom(room,{quiz,phase:'open',deadline:Date.now()+25000,round,rounds:{...(state.rounds||{}),[quiz]:round}});}
+  if(action==='start'){const round=token().slice(0,12);await updateRoom(room,{quiz,phase:'open',deadline:Date.now()+60000,round,rounds:{...(state.rounds||{}),[quiz]:round}});}
   else {if(quiz!==state.quiz)fail('Сначала запустите этот квиз.',409);await updateRoom(room,{phase:'revealed'});}
   return res.status(200).json({ok:true});
  }

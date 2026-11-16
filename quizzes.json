@@ -10,7 +10,7 @@
       "false false"
     ],
     "correct": 1,
-    "time": 25,
+    "time": 60,
     "why": "Правильный ответ: true false",
     "kind": "quiz",
     "number": 1
@@ -26,7 +26,7 @@
       "Ничего, всё ок"
     ],
     "correct": 2,
-    "time": 25,
+    "time": 60,
     "why": "Правильный ответ: ReferenceError",
     "kind": "quiz",
     "number": 2
@@ -42,7 +42,7 @@
       "false false"
     ],
     "correct": 1,
-    "time": 20,
+    "time": 60,
     "why": "Правильный ответ: true false",
     "kind": "quiz",
     "number": 3
@@ -58,7 +58,7 @@
       "TypeError"
     ],
     "correct": 1,
-    "time": 25,
+    "time": 60,
     "why": "Правильный ответ: 9 и 0",
     "kind": "quiz",
     "number": 4
@@ -74,7 +74,7 @@
       "1 3"
     ],
     "correct": 1,
-    "time": 25,
+    "time": 60,
     "why": "Правильный ответ: 1 3 4",
     "kind": "quiz",
     "number": 5
@@ -90,7 +90,7 @@
       "undefined false"
     ],
     "correct": 1,
-    "time": 25,
+    "time": 60,
     "why": "Правильный ответ: GameError true",
     "kind": "quiz",
     "number": 6
