@@ -1,0 +1,182 @@
+[
+  {
+    "key": "q1",
+    "question": "Что выведет?",
+    "code": "class A {\n  constructor() { this.x = 1; }\n  hi() { return 'hi'; }\n}\nconst a = new A();\nconsole.log(a.hasOwnProperty('x'), a.hasOwnProperty('hi'));",
+    "options": [
+      "true true",
+      "true false",
+      "false true",
+      "false false"
+    ],
+    "correct": 1,
+    "time": 25,
+    "why": "Правильный ответ: true false",
+    "kind": "quiz",
+    "number": 1
+  },
+  {
+    "key": "q2",
+    "question": "Что будет?",
+    "code": "class Hero {\n  constructor(name) { this.name = name; }\n}\nclass Mage extends Hero {\n  constructor(name, mana) {\n    this.mana = mana;\n  }\n}\nnew Mage('Мерлин', 50);",
+    "options": [
+      "Mage { mana: 50 }",
+      "Mage { name: undefined, mana: 50 }",
+      "ReferenceError",
+      "Ничего, всё ок"
+    ],
+    "correct": 2,
+    "time": 25,
+    "why": "Правильный ответ: ReferenceError",
+    "kind": "quiz",
+    "number": 2
+  },
+  {
+    "key": "q3",
+    "question": "Что выведет?",
+    "code": "class A {}\nclass B extends A {}\nconst a = new A();\nconst b = new B();\nconsole.log(b instanceof A, a instanceof B);",
+    "options": [
+      "true true",
+      "true false",
+      "false true",
+      "false false"
+    ],
+    "correct": 1,
+    "time": 20,
+    "why": "Правильный ответ: true false",
+    "kind": "quiz",
+    "number": 3
+  },
+  {
+    "key": "q4",
+    "question": "Что выведет цикл?",
+    "code": "class Shape { area() { return 0; } }\nclass Square extends Shape {\n  constructor(a) { super(); this.a = a; }\n  area() { return this.a * this.a; }\n}\nfor (const s of [new Square(3), new Shape()]) {\n  console.log(s.area());\n}",
+    "options": [
+      "9 и 9",
+      "9 и 0",
+      "0 и 0",
+      "TypeError"
+    ],
+    "correct": 1,
+    "time": 25,
+    "why": "Правильный ответ: 9 и 0",
+    "kind": "quiz",
+    "number": 4
+  },
+  {
+    "key": "q5",
+    "question": "Что выведет?",
+    "code": "try {\n  console.log(1);\n  throw new Error('x');\n  console.log(2);\n} catch (e) {\n  console.log(3);\n} finally {\n  console.log(4);\n}",
+    "options": [
+      "1 2 3 4",
+      "1 3 4",
+      "1 4",
+      "1 3"
+    ],
+    "correct": 1,
+    "time": 25,
+    "why": "Правильный ответ: 1 3 4",
+    "kind": "quiz",
+    "number": 5
+  },
+  {
+    "key": "q6",
+    "question": "Что выведет?",
+    "code": "class GameError extends Error {\n  constructor(m) { super(m); this.name = 'GameError'; }\n}\ntry {\n  throw new GameError('Мало маны');\n} catch (e) {\n  console.log(e.name, e instanceof Error);\n}",
+    "options": [
+      "Error true",
+      "GameError true",
+      "GameError false",
+      "undefined false"
+    ],
+    "correct": 1,
+    "time": 25,
+    "why": "Правильный ответ: GameError true",
+    "kind": "quiz",
+    "number": 6
+  },
+  {
+    "question": "Карточка 1. Что выведет?",
+    "code": "class A {}\ntypeof A",
+    "options": [
+      "\"object\"",
+      "\"function\"",
+      "\"class\"",
+      "undefined"
+    ],
+    "correct": 1,
+    "why": "Класс в JavaScript — особая функция.",
+    "kind": "card",
+    "number": 1
+  },
+  {
+    "question": "Карточка 2. Что произойдёт?",
+    "code": "class A {}\nconst a = A();",
+    "options": [
+      "Создаст объект",
+      "undefined",
+      "TypeError",
+      "SyntaxError"
+    ],
+    "correct": 2,
+    "why": "Класс вызывается с new. Без new будет TypeError.",
+    "kind": "card",
+    "number": 2
+  },
+  {
+    "question": "Карточка 3. Что выведет?",
+    "code": "class A { static n = 1; }\nnew A().n",
+    "options": [
+      "1",
+      "0",
+      "undefined",
+      "TypeError"
+    ],
+    "correct": 2,
+    "why": "static n принадлежит классу A, а не его экземпляру.",
+    "kind": "card",
+    "number": 3
+  },
+  {
+    "question": "Карточка 4. Что выведет?",
+    "code": "class A { get x() { return 5; } }\nnew A().x",
+    "options": [
+      "5",
+      "undefined",
+      "Функцию",
+      "TypeError"
+    ],
+    "correct": 0,
+    "why": "Геттер вызывается при чтении свойства, без круглых скобок.",
+    "kind": "card",
+    "number": 4
+  },
+  {
+    "question": "Карточка 5. Что произойдёт?",
+    "code": "class A { #s = 1; }\nnew A().#s",
+    "options": [
+      "1",
+      "undefined",
+      "TypeError",
+      "SyntaxError"
+    ],
+    "correct": 3,
+    "why": "Доступ к приватному полю снаружи класса — синтаксическая ошибка.",
+    "kind": "card",
+    "number": 5
+  },
+  {
+    "question": "Карточка 6. Что выведет?",
+    "code": "// Hero — уже объявленный класс.\nnew Hero(\"Аня\") === new Hero(\"Аня\")",
+    "options": [
+      "true",
+      "false",
+      "undefined",
+      "TypeError"
+    ],
+    "correct": 1,
+    "why": "Два вызова new создают разные объекты, даже с одинаковыми полями.",
+    "kind": "card",
+    "number": 6
+  }
+]
