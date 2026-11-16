@@ -1,0 +1,2927 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JavaScript — Урок 2. Функции</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400..800&family=Manrope:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap">
+<style>
+:root {
+  --ink: #12160C; --light: #F4F8EA; --paper: #FCFEF7; --line: #DDE8C4;
+  --lime: #C5F82A; --lime-d: #4F7A00; --lime-soft: #E2F5A6;
+  --muted: #4B5340; --muted-d: #C9D3B8; --dim: #6B735E;
+  --panel: #1D2414; --panel-line: #3A4628;
+  --code: #1A2011; --code-ink: #E8EEDC;
+  --kw: #C5F82A; --str: #FFC07A; --num: #8FD3FF; --com: #8C9A76; --err: #FF8A7A; --tag: #9EE6A8;
+  --red-bg: #FFE3DC; --red: #A3271A;
+  --fd: 'Unbounded', Verdana, sans-serif;
+  --fb: 'Manrope', Arial, sans-serif;
+  --fm: 'JetBrains Mono', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #0B0E07; overflow: hidden; font-family: var(--fb); }
+/* без лигатур: студенты должны видеть >= и ===, а не ≥ и ≡ */
+html { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+input, textarea, button { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+button { font: inherit; color: inherit; }
+
+/* ---------- stage & slides ---------- */
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; overflow: hidden; background: var(--light); transform-origin: center center; }
+.slide {
+  position: absolute; inset: 0; padding: 128px 128px 160px;
+  display: flex; flex-direction: column; gap: 40px;
+  background: var(--light); color: var(--ink);
+  opacity: 0; visibility: hidden; transform: translateX(90px);
+  transition: opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1), visibility 0s linear .6s;
+}
+.slide.past { transform: translateX(-90px); }
+.slide.active { opacity: 1; visibility: visible; transform: none; transition: opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+.slide.dark { background: var(--ink); color: #F1F6E4; }
+.slide.lime { background: var(--lime); color: var(--ink); }
+.slide.center { justify-content: center; }
+.split { display: grid; gap: 56px; }
+
+/* build-in animation: every .a appears in turn */
+.a { opacity: 0; transform: translateY(28px); }
+.a.pop { transform: scale(.85); }
+.a.left { transform: translateX(-48px); }
+.slide.active .a { animation: rise .6s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
+@keyframes rise { to { opacity: 1; transform: none; } }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- type ---------- */
+h1 { font-family: var(--fd); font-weight: 800; font-size: 100px; line-height: 1.05; letter-spacing: -2px; }
+h2 { font-family: var(--fd); font-weight: 700; font-size: 60px; line-height: 1.1; letter-spacing: -1px; }
+h3 { font-size: 34px; font-weight: 800; line-height: 1.2; }
+p, li, td, th { font-size: 30px; line-height: 1.4; }
+ul, ol { padding-left: 1.2em; }
+.s36 { font-size: 36px; } .s32 { font-size: 32px; } .s28 { font-size: 28px; } .s26 { font-size: 26px; } .s24 { font-size: 24px; }
+.big { font-size: 40px; line-height: 1.3; font-weight: 700; }
+.mono { font-family: var(--fm); }
+.muted { color: var(--muted); }
+.dark .muted, .card.dk .muted, .dark .card .muted { color: var(--muted-d); }
+.lime .muted { color: #2A3318; }
+.hl { color: var(--lime-d); }
+.dark .hl, .card.dk .hl { color: var(--lime); }
+.row { display: flex; gap: 32px; }
+.row > * { flex: 1; }
+.col { display: flex; flex-direction: column; gap: 24px; }
+.grid { display: grid; gap: 24px; }
+.g2 { grid-template-columns: 1fr 1fr; } .g3 { grid-template-columns: 1fr 1fr 1fr; } .g4 { grid-template-columns: repeat(4, 1fr); }
+.between { display: flex; justify-content: space-between; align-items: center; gap: 32px; }
+
+/* ---------- blocks ---------- */
+.card { background: var(--paper); border: 2px solid var(--line); border-radius: 28px; padding: 36px; display: flex; flex-direction: column; gap: 16px; }
+.dark .card { background: var(--panel); border-color: var(--panel-line); color: #F1F6E4; }
+.card.dk { background: var(--ink); border-color: var(--ink); color: #F1F6E4; }
+.card.dk h3, .dark .card h3 { color: var(--lime); }
+.slide .card.lm { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.slide .card.lm h3 { color: var(--ink); }
+.card.rd { background: var(--red-bg); border-color: var(--red-bg); }
+.card.rd h3 { color: var(--red); }
+.card.tight { padding: 28px; gap: 12px; }
+.pill { display: inline-block; align-self: flex-start; font-weight: 800; font-size: 28px; background: var(--lime); color: var(--ink); padding: 10px 26px; border-radius: 999px; }
+.pill.dk { background: var(--ink); color: var(--lime); }
+.note { font-size: 28px; font-weight: 700; background: var(--lime); padding: 14px 22px; border-radius: 18px; }
+.sticker { position: absolute; font-weight: 800; font-size: 28px; background: var(--lime); color: var(--ink); padding: 14px 28px; border-radius: 999px; box-shadow: 0 12px 30px rgba(18,22,12,.18); animation: wobble 4s ease-in-out infinite; text-align: center; z-index: 2; }
+@keyframes wobble { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(2deg) translateY(-8px); } }
+.blob { position: absolute; border-radius: 50%; background: var(--lime); opacity: .1; animation: float 10s ease-in-out infinite; pointer-events: none; }
+@keyframes float { 50% { transform: translate(36px, -44px) scale(1.07); } }
+.bignum { position: absolute; font-family: var(--fd); font-weight: 800; line-height: 1; opacity: .1; pointer-events: none; }
+.footer { position: absolute; left: 128px; right: 128px; bottom: 56px; display: flex; justify-content: space-between; font-size: 24px; color: var(--dim); pointer-events: none; }
+.dark .footer { color: var(--com); }
+.lime .footer { color: #3A4A10; }
+.emo { display: inline-block; animation: bob 2.4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(6deg); } }
+
+/* tables */
+table.t { border-collapse: collapse; width: 100%; }
+table.t th { text-align: left; font-weight: 800; padding: 12px 18px; border-bottom: 3px solid var(--ink); }
+table.t td { padding: 12px 18px; border-bottom: 1px solid var(--line); }
+table.t tr.hl td { background: var(--lime-soft); }
+table.t.mono td, table.t.mono th { font-family: var(--fm); }
+table.t tr { transition: background .2s; }
+table.t tbody tr:hover td { background: #EEF6D8; }
+
+/* timeline bar */
+.tbar { display: flex; gap: 6px; height: 60px; }
+.tbar i { display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 800; font-size: 24px; border-radius: 12px; transform: scaleX(0); transform-origin: left; }
+.slide.active .tbar i { animation: grow .6s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: calc(var(--i) * 140ms + 300ms); }
+@keyframes grow { to { transform: scaleX(1); } }
+.tbar .th { background: var(--ink); color: var(--lime); } .tbar .pr { background: var(--lime); } .tbar .ot { background: var(--line); }
+
+/* history timeline */
+.tl > div { border-top: 6px solid var(--lime); padding-top: 24px; display: flex; flex-direction: column; gap: 14px; }
+.tl .yr { font-family: var(--fd); font-size: 44px; font-weight: 800; color: var(--lime); }
+
+/* ---------- code ---------- */
+pre.code { background: var(--code); color: var(--code-ink); font-family: var(--fm); font-size: 26px; line-height: 1.55; border-radius: 28px; padding: 36px 40px; white-space: pre; overflow: hidden; }
+pre.code.s28 { font-size: 28px; } pre.code.s24 { font-size: 24px; }
+.tk-kw { color: var(--kw); } .tk-str { color: var(--str); } .tk-num { color: var(--num); } .tk-com { color: var(--com); } .tk-err { color: var(--err); } .tk-tag { color: var(--tag); }
+.ln { display: block; margin: 0 -14px; padding: 0 14px; border-radius: 8px; min-height: 1.55em; transition: background .25s, opacity .25s, box-shadow .25s; }
+.ln.on { background: rgba(197,248,42,.2); box-shadow: inset 6px 0 0 var(--lime); }
+.ln.off { opacity: .32; }
+
+/* runner */
+.runner { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.editor { position: relative; background: var(--code); border-radius: 24px; overflow: hidden; }
+.editor pre, .editor textarea { position: absolute; inset: 0; margin: 0; padding: 26px 32px; font-family: var(--fm); font-size: 26px; line-height: 1.55; white-space: pre; tab-size: 2; border: 0; overflow: auto; letter-spacing: 0; }
+.editor pre { pointer-events: none; color: var(--code-ink); }
+.editor textarea { background: transparent; color: transparent; caret-color: var(--lime); resize: none; outline: none; width: 100%; height: 100%; }
+.editor textarea::selection { background: rgba(197,248,42,.35); color: transparent; }
+.editor:focus-within { box-shadow: 0 0 0 3px var(--lime); }
+.bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.hint { font-size: 24px; color: var(--dim); }
+.dark .hint { color: var(--com); }
+.console { background: #0E1209; color: var(--code-ink); border-radius: 20px; padding: 16px 24px; font-family: var(--fm); font-size: 24px; line-height: 1.5; overflow: auto; }
+.console:empty::after { content: 'Консоль пуста — нажмите ▶'; color: var(--com); }
+.console .line { animation: fadein .3s; white-space: pre-wrap; }
+.console .line::before { content: '› '; color: var(--com); }
+.console .err { color: var(--err); } .console .warn { color: #FFD36B; } .console .sys { color: var(--lime); }
+
+/* controls */
+.btn { font-family: var(--fb); font-weight: 800; font-size: 26px; border: 0; border-radius: 999px; padding: 12px 28px; background: var(--lime); color: var(--ink); cursor: pointer; transition: transform .15s, box-shadow .15s; white-space: nowrap; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(18,22,12,.18); }
+.btn:active { transform: scale(.96); }
+.btn.dk { background: var(--ink); color: var(--lime); }
+.btn.ghost { background: transparent; border: 2px solid currentColor; padding: 10px 26px; }
+.btn.sm { font-size: 24px; padding: 8px 20px; }
+.inp { font-family: var(--fm); font-size: 30px; padding: 12px 20px; border-radius: 16px; border: 2px solid var(--line); background: #fff; color: var(--ink); outline: none; min-width: 0; }
+.inp:focus { border-color: var(--lime-d); box-shadow: 0 0 0 3px rgba(197,248,42,.5); }
+.dark .inp, .card.dk .inp { background: var(--code); border-color: var(--panel-line); color: var(--code-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 12px; }
+.chip { font-family: var(--fm); font-size: 24px; padding: 8px 18px; border-radius: 999px; border: 2px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; transition: transform .15s, background .15s; }
+.chip:hover { background: var(--lime); border-color: var(--lime); transform: translateY(-2px); }
+.dark .chip, .card.dk .chip { background: var(--panel); border-color: var(--panel-line); color: var(--code-ink); }
+.dark .chip:hover, .card.dk .chip:hover { background: var(--lime); color: var(--ink); }
+.tog { display: inline-flex; align-items: center; gap: 14px; font-size: 26px; font-weight: 700; cursor: pointer; user-select: none; }
+.tog i { flex: none; width: 66px; height: 38px; border-radius: 999px; background: #B8C2A6; position: relative; transition: background .25s; }
+.tog i::after { content: ''; position: absolute; left: 4px; top: 4px; width: 30px; height: 30px; border-radius: 50%; background: #fff; transition: left .25s; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+.tog.on i { background: var(--lime-d); }
+.dark .tog.on i, .card.dk .tog.on i { background: var(--lime); }
+.tog.on i::after { left: 32px; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 14px; border-radius: 999px; background: var(--line); outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 40px; height: 40px; border-radius: 50%; background: var(--lime); border: 4px solid var(--ink); cursor: pointer; }
+input[type=range]::-moz-range-thumb { width: 34px; height: 34px; border-radius: 50%; background: var(--lime); border: 4px solid var(--ink); cursor: pointer; }
+.dark input[type=range] { background: var(--panel-line); }
+.out { font-family: var(--fm); font-size: 28px; }
+.badge { display: inline-block; font-family: var(--fm); font-size: 24px; font-weight: 700; padding: 4px 16px; border-radius: 999px; background: var(--lime); color: var(--ink); }
+.badge.no { background: var(--red-bg); color: var(--red); }
+.badge.t-string { background: #FFE2BF; } .badge.t-number { background: #CDEBFF; } .badge.t-boolean { background: var(--lime); }
+.badge.t-undefined, .badge.t-object { background: #E4E1F5; } .badge.t-bigint { background: #CFF3E7; } .badge.t-symbol { background: #F6D5EC; } .badge.t-function { background: #FFF1A8; }
+.flash { animation: flash .5s; }
+@keyframes flash { 0% { transform: scale(.9); opacity: .2; } 60% { transform: scale(1.06); } 100% { transform: none; opacity: 1; } }
+.shake { animation: shake .4s; }
+@keyframes shake { 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+
+/* expression widget */
+.expr-row { display: flex; align-items: center; gap: 18px; }
+.expr-row .inp { flex: 1; }
+.expr-row .arrow { font-size: 36px; font-weight: 800; color: var(--lime-d); }
+.expr-row output { font-family: var(--fm); font-size: 32px; font-weight: 700; min-width: 180px; }
+.v-str { color: #A35A00; } .v-num { color: #1F6FA8; } .v-err { color: var(--red); font-size: 26px; }
+
+/* cover */
+#jsBadge { position: absolute; left: 1380px; top: 210px; width: 340px; height: 340px; background: var(--lime); border-radius: 48px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 34px 18px 0; font-family: var(--fd); font-size: 150px; font-weight: 800; color: var(--ink); cursor: pointer; transform: rotate(6deg); transition: transform .2s ease-out; box-shadow: 0 30px 60px rgba(0,0,0,.35); user-select: none; z-index: 2; }
+#typer { position: absolute; left: 1220px; top: 640px; width: 500px; font-family: var(--fm); font-size: 28px; background: #F1F6E4; color: var(--ink); padding: 14px 24px; border-radius: 999px; transform: rotate(-5deg); text-align: center; min-height: 68px; z-index: 2; }
+#typer::after { content: '▌'; animation: blink 1s steps(1) infinite; color: var(--lime-d); }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* client: browser mock */
+.layer { cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
+.layer:hover { transform: translateY(-3px); }
+.layer .lh { display: flex; justify-content: space-between; align-items: center; }
+.layer .lh b { font-family: var(--fm); font-size: 40px; }
+.layer.on { border-color: var(--lime-d); background: #F0FAD2; }
+.layer.locked { cursor: default; }
+.browser { border-radius: 24px; overflow: hidden; background: #fff; box-shadow: 0 24px 60px rgba(18,22,12,.18); display: flex; flex-direction: column; border: 2px solid var(--line); }
+.bbar { display: flex; align-items: center; gap: 10px; background: #E9EEDD; padding: 14px 20px; }
+.bbar i { width: 16px; height: 16px; border-radius: 50%; background: #C9D3B8; }
+.bbar .url { margin-left: 16px; flex: 1; background: #fff; border-radius: 999px; padding: 6px 20px; font-size: 22px; color: var(--dim); font-family: var(--fm); }
+.mini { position: relative; flex: 1; padding: 34px 40px; background: #fff; color: #000; font-family: 'Times New Roman', serif; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; transition: background .4s; overflow: hidden; }
+.mini h1 { font-family: 'Times New Roman', serif; font-size: 46px; letter-spacing: 0; font-weight: 700; line-height: 1.2; }
+.mini p { font-size: 28px; }
+.mini .mbtn { font-family: Arial, sans-serif; font-size: 24px; padding: 4px 12px; border: 1px solid #767676; border-radius: 3px; background: #EFEFEF; color: #000; cursor: pointer; }
+.mini .mlive { display: none; }
+.mini.css { background: linear-gradient(135deg, #F4F8EA, #E2F5A6); font-family: var(--fb); color: var(--ink); }
+.mini.css h1 { font-family: var(--fd); font-weight: 800; font-size: 50px; letter-spacing: -1px; }
+.mini.css p { font-family: var(--fb); }
+.mini.css .mbtn { font-family: var(--fb); background: var(--ink); color: var(--lime); border: 0; border-radius: 999px; padding: 16px 36px; font-weight: 800; font-size: 28px; box-shadow: 0 10px 24px rgba(18,22,12,.25); transition: transform .15s; }
+.mini.css .mbtn:hover { transform: translateY(-3px); }
+.mini.js .mlive { display: block; font-family: var(--fm); font-size: 24px; color: var(--lime-d); }
+.flyer { position: absolute; font-size: 54px; pointer-events: none; animation: fly 1.2s ease-out forwards; }
+@keyframes fly { to { transform: translateY(-260px) rotate(30deg) scale(1.4); opacity: 0; } }
+
+/* DOM / BOM */
+.bom > div { display: flex; justify-content: space-between; gap: 20px; padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 26px; }
+.bom b { color: var(--lime-d); transition: color .3s; }
+.tree { display: flex; flex-direction: column; }
+.tnode { text-align: left; background: none; border: 0; font-family: var(--fm); font-size: 26px; line-height: 1.6; color: var(--code-ink); cursor: pointer; padding: 0 10px; border-radius: 8px; white-space: pre; }
+.tnode:hover, .tnode.sel { background: rgba(197,248,42,.2); color: var(--lime); }
+.mock { border-radius: 14px; background: #F1F6E4; color: var(--ink); padding: 14px; display: flex; flex-direction: column; gap: 10px; font-size: 22px; flex: 1; }
+.mock [data-n] { border: 2px dashed transparent; border-radius: 10px; padding: 8px 12px; transition: border-color .2s, background .2s; }
+.mock .mhead { background: #DDE8C4; font-size: 20px; }
+.mock .mh { font-weight: 800; font-size: 28px; }
+.mock .sel { border-color: var(--lime-d); background: rgba(197,248,42,.45); animation: flash .5s; }
+
+/* keywords */
+.kw { font-family: var(--fm); font-size: 26px; background: var(--ink); color: var(--lime); padding: 8px 20px; border-radius: 999px; border: 0; cursor: pointer; transition: transform .15s; }
+.kw:hover { transform: translateY(-3px) rotate(-3deg); }
+.kw.res { background: transparent; color: var(--ink); border: 2px solid var(--lime-d); }
+.toast { position: absolute; left: 128px; right: 128px; bottom: 120px; background: var(--ink); color: #F1F6E4; font-family: var(--fm); font-size: 26px; padding: 18px 28px; border-radius: 18px; opacity: 0; transform: translateY(20px); transition: .3s; pointer-events: none; }
+.toast.on { opacity: 1; transform: none; }
+.toast b { color: var(--err); }
+
+/* flip quiz cards */
+.flip { perspective: 1400px; cursor: pointer; height: 230px; }
+.flip .in { position: relative; height: 100%; transition: transform .7s cubic-bezier(.2,.8,.2,1); transform-style: preserve-3d; }
+.flip.open .in { transform: rotateY(180deg); }
+.flip .f, .flip .b { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 28px; padding: 32px 36px; display: flex; flex-direction: column; gap: 14px; }
+.flip .f { background: var(--panel); border: 2px solid var(--panel-line); }
+.flip .b { background: var(--lime); color: var(--ink); transform: rotateY(180deg); }
+.flip .qn { font-family: var(--fd); font-size: 26px; font-weight: 800; color: var(--lime); }
+.flip .q { font-family: var(--fm); font-size: 34px; color: #F1F6E4; white-space: pre; line-height: 1.4; }
+.flip .q.sm { font-size: 26px; }
+.flip .ans { font-family: var(--fm); font-size: 44px; font-weight: 700; }
+.flip .b p { font-size: 26px; }
+
+/* variant cards */
+.vars { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+.var { display: flex; gap: 20px; align-items: flex-start; background: var(--paper); border: 2px solid var(--line); border-radius: 24px; padding: 22px 26px; cursor: zoom-in; transition: transform .2s, box-shadow .2s; }
+.var:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(18,22,12,.12); }
+.var .num { flex: none; width: 56px; height: 56px; border-radius: 50%; background: var(--lime); display: flex; align-items: center; justify-content: center; font-family: var(--fd); font-size: 24px; font-weight: 800; }
+.var h3 { font-size: 28px; margin-bottom: 6px; }
+.var p { font-size: 24px; line-height: 1.35; color: var(--muted); }
+.var.tip { background: var(--ink); color: #F1F6E4; cursor: default; align-items: center; border-color: var(--ink); }
+.var.tip:hover { transform: none; box-shadow: none; }
+.var.tip p { color: #F1F6E4; }
+.vars.hw { gap: 24px; }
+.vars.hw .var { padding: 32px; }
+.vars.hw .var h3 { font-size: 32px; margin-bottom: 10px; }
+.vars.hw .var p { font-size: 26px; line-height: 1.4; }
+.lvl { background: var(--paper); border: 2px solid var(--line); border-radius: 28px; padding: 32px; display: flex; flex-direction: column; gap: 18px; }
+.lvl.mid { background: var(--lime-soft); border-color: var(--lime-soft); }
+.lvl.top { background: var(--ink); border-color: var(--ink); color: #F1F6E4; }
+.lvl .pill { font-size: 24px; padding: 8px 20px; }
+.lvl ul { padding-left: 1.1em; display: flex; flex-direction: column; gap: 10px; }
+.lvl li { font-size: 26px; line-height: 1.35; }
+#zoom { position: absolute; inset: 0; z-index: 50; background: rgba(18,22,12,.72); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity .3s; }
+#zoom.on { opacity: 1; pointer-events: auto; cursor: zoom-out; }
+#zoom .var { width: 1240px; padding: 56px 60px; gap: 36px; cursor: zoom-out; animation: flash .45s; box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+#zoom .var .num { width: 104px; height: 104px; font-size: 44px; }
+#zoom .var h3 { font-size: 56px; margin-bottom: 18px; }
+#zoom .var p { font-size: 40px; line-height: 1.4; color: var(--ink); }
+
+/* timer & picker */
+.timer { font-family: var(--fd); font-size: 110px; font-weight: 800; letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1; }
+.timer.done { animation: blink 1s steps(1) infinite; }
+.picker-num { font-family: var(--fd); font-size: 88px; font-weight: 800; min-width: 170px; text-align: center; line-height: 1; }
+.ring { position: relative; width: 420px; height: 420px; }
+.ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.ring .timer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 96px; }
+
+/* visualizers */
+.state { display: flex; gap: 16px; flex-wrap: wrap; }
+.state span { font-family: var(--fm); font-size: 28px; padding: 8px 20px; border-radius: 14px; background: var(--paper); border: 2px solid var(--line); }
+.dark .state span { background: var(--panel); border-color: var(--panel-line); }
+.state span.t { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.state span.f { background: var(--red-bg); border-color: var(--red-bg); color: var(--red); }
+.boxes { display: flex; gap: 12px; }
+.boxes i { flex: 1; height: 72px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-style: normal; font-family: var(--fm); font-size: 30px; font-weight: 700; background: #fff; border: 2px solid var(--line); transition: all .3s; }
+.boxes i.cur { transform: translateY(-8px); border-color: var(--ink); }
+.boxes i.ok { background: var(--lime); border-color: var(--lime); }
+.boxes i.skip { background: #EEF0E8; color: #A8B096; text-decoration: line-through; }
+.boxes i.stop { background: var(--red); color: #fff; border-color: var(--red); }
+.boxes i.gone { opacity: .25; }
+.g9 { display: grid; grid-template-columns: repeat(9, 44px); gap: 6px; }
+.g9 i { width: 44px; height: 44px; border-radius: 8px; background: #fff; border: 2px solid var(--line); font-style: normal; font-family: var(--fm); font-size: 18px; display: flex; align-items: center; justify-content: center; color: var(--dim); transition: background .15s; }
+.g9 i.v { background: #E7EEDA; }
+.g9 i.hit { background: var(--lime); border-color: var(--lime-d); color: var(--ink); font-weight: 700; }
+.g9 i.cut { opacity: .25; }
+.formula { font-family: var(--fm); font-size: 44px; line-height: 1.3; }
+.formula span[data-p] { padding: 4px 10px; border-radius: 10px; background: var(--panel-line); transition: background .25s, color .25s; }
+.formula span[data-p].on { background: var(--lime); color: var(--ink); }
+.part.on { border-top-color: #fff !important; }
+.part.on h3 { color: #fff !important; }
+.bubble { display: inline-flex; align-items: center; gap: 12px; font-family: var(--fm); font-size: 26px; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 10px 20px; animation: flash .4s; }
+
+aside.notes { display: none; }
+
+/* правила урока */
+.rule { cursor: pointer; transition: transform .2s; }
+.rule:hover { transform: translateY(-6px) rotate(-1deg); }
+.rule-art { position: relative; height: 220px; display: flex; align-items: center; justify-content: center; border-radius: 20px; background: #EEF6D8; overflow: hidden; }
+.emo-big { font-size: 120px; line-height: 1; display: inline-block; }
+.vibe { animation: vibe 1.4s infinite; }
+@keyframes vibe { 0%,60%,100% { transform: none; } 5%,15%,25%,35%,45% { transform: translateX(-7px) rotate(-12deg); } 10%,20%,30%,40%,50% { transform: translateX(7px) rotate(12deg); } }
+.zzz { position: absolute; right: 26px; top: 22px; font-family: var(--fm); font-size: 24px; color: var(--dim); animation: zzz 1.4s infinite; }
+@keyframes zzz { 0%,60%,100% { opacity: 0; } 10%,50% { opacity: 1; transform: translateY(-6px); } }
+.stamp { position: absolute; font-family: var(--fd); font-weight: 800; font-size: 44px; color: #D2361E; border: 6px solid #D2361E; border-radius: 14px; padding: 6px 18px; transform: rotate(-14deg); opacity: 0; background: rgba(255,255,255,.75); }
+.slide.active .stamp { animation: stamp .35s cubic-bezier(.3,1.6,.5,1) 1.6s forwards; }
+@keyframes stamp { from { opacity: 0; transform: rotate(-14deg) scale(3); } to { opacity: 1; transform: rotate(-14deg) scale(1); } }
+.bla { position: absolute; bottom: -50px; font-weight: 800; font-size: 26px; background: #fff; border: 2px solid var(--line); border-radius: 18px; padding: 6px 14px; opacity: 0; animation: blaUp 3s infinite; }
+.b1 { left: 24px; } .b2 { left: 160px; animation-delay: 1s; } .b3 { right: 24px; animation-delay: 2s; }
+@keyframes blaUp { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: 1; transform: translateY(-100px) scale(1); } 70% { opacity: 1; transform: translateY(-160px); } 80% { transform: translateY(-170px) scale(1.4); opacity: 0; } 100% { opacity: 0; } }
+.zip { animation: zipPop 3s infinite; }
+@keyframes zipPop { 0%,70% { transform: scale(1); } 78% { transform: scale(1.3) rotate(-10deg); } 86% { transform: scale(1); } }
+.swap { position: absolute; }
+.s-a { animation: swapA 4s infinite; } .s-b { animation: swapB 4s infinite; }
+@keyframes swapA { 0%,40% { opacity: 1; transform: scale(1); } 50%,90% { opacity: 0; transform: scale(.4) rotate(-30deg); } 100% { opacity: 1; } }
+@keyframes swapB { 0%,40% { opacity: 0; transform: scale(.4); } 50%,90% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+.heart { position: absolute; right: 40px; top: 24px; font-size: 54px; animation: beat 1s infinite; }
+@keyframes beat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.3); } 30% { transform: scale(1); } 45% { transform: scale(1.2); } }
+
+/* урок 2: соковыжималка */
+.juicer { flex: 1; display: flex; align-items: center; gap: 24px; }
+.jin { font-size: 96px; width: 130px; text-align: center; }
+.jbox { flex: 1; position: relative; background: var(--ink); border-radius: 28px; padding: 40px 36px 36px; box-shadow: 0 24px 50px rgba(18,22,12,.25); }
+.jbox::before { content: '⚙️'; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); font-size: 56px; animation: spinG 6s linear infinite; }
+@keyframes spinG { to { transform: translateX(-50%) rotate(360deg); } }
+.jout { width: 280px; display: flex; flex-direction: column; align-items: center; gap: 10px; opacity: .25; transition: opacity .3s; text-align: center; }
+.jout.on { opacity: 1; animation: flash .5s; }
+
+/* анатомия */
+.seg { border-radius: 10px; transition: background .3s, color .3s, box-shadow .3s; }
+.seg.on { background: var(--lime); color: var(--ink); box-shadow: 0 0 0 6px var(--lime); }
+.seg.on .seg { color: var(--ink); }
+[data-legend] .chip.on { background: var(--lime); border-color: var(--lime); }
+
+/* область видимости */
+.scope { flex: 1; border: 3px dashed #B8C2A6; border-radius: 24px; padding: 20px 26px; display: flex; flex-direction: column; gap: 12px; background: var(--paper); transition: border-color .3s, background .3s, box-shadow .3s; }
+.scope .scope { background: #EEF6D8; }
+.scope .scope .scope { background: #E2F5A6; }
+.scope .zt { font-weight: 800; font-size: 28px; }
+.scope.look { border-style: solid; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(18,22,12,.15); }
+.scope.found { background: var(--lime) !important; border-style: solid; border-color: var(--lime-d); }
+.scope.miss { border-color: #D2361E; border-style: solid; }
+
+/* rest / spread */
+.restbox { border: 3px dashed var(--panel-line); border-radius: 20px; padding: 20px 24px; min-height: 80px; display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.restbox .chip, [data-chips] .chip { animation: flash .4s; cursor: default; }
+
+/* стек вызовов */
+.stack { flex: 1; display: flex; flex-direction: column-reverse; justify-content: flex-start; gap: 10px; min-height: 620px; padding: 16px; border-left: 4px solid var(--line); border-right: 4px solid var(--line); border-bottom: 4px solid var(--line); border-radius: 0 0 24px 24px; }
+.frame { font-family: var(--fm); font-size: 28px; padding: 14px 22px; border-radius: 14px; background: var(--ink); color: #F1F6E4; animation: dropIn .35s cubic-bezier(.2,.8,.2,1); }
+.frame i { color: var(--com); font-style: normal; }
+.frame b { color: var(--lime); }
+.frame.ret { background: var(--lime); color: var(--ink); }
+.frame.ret b { color: var(--ink); }
+.frame.pop { animation: popOut .35s forwards; }
+@keyframes dropIn { from { transform: translateY(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes popOut { to { transform: translateY(-60px) scale(.8); opacity: 0; } }
+
+/* копилки */
+.bank { align-items: center; text-align: center; gap: 10px; padding: 24px; animation: flash .4s; }
+.bank .pig { font-size: 72px; line-height: 1; }
+.bank .chip { font-size: 26px; }
+
+/* тревоги: P · S · M */
+#alarm { position: absolute; inset: 0; z-index: 70; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 20px; text-align: center; cursor: pointer; }
+#alarm.on { display: flex; }
+#alarm .al-emo { font-size: 260px; line-height: 1; }
+#alarm .al-title { font-family: var(--fd); font-size: 110px; font-weight: 800; letter-spacing: -2px; color: #fff; }
+#alarm .al-sub { font-size: 44px; font-weight: 700; color: #F1F6E4; max-width: 1500px; }
+#alarm.phone { animation: siren .5s steps(1) infinite; }
+#alarm.phone .al-emo { animation: vibe .6s infinite; }
+@keyframes siren { 0% { background: rgba(210,54,30,.94); } 50% { background: rgba(18,22,12,.95); } }
+#alarm.shh { background: rgba(18,22,12,.95); }
+#alarm.shh .al-emo { animation: shh 1.2s ease-in-out infinite; }
+@keyframes shh { 50% { transform: scale(1.15); } }
+#alarm.shh .al-title { color: var(--lime); }
+#alarm.love { background: rgba(197,248,42,.96); }
+#alarm.love .al-title, #alarm.love .al-sub { color: var(--ink); }
+#alarm.love .al-emo { animation: beat 1s infinite; }
+.spin { animation: none; }
+
+/* chrome outside slides */
+#prog { position: absolute; top: 0; left: 0; height: 8px; background: var(--lime); z-index: 40; transition: width .4s; }
+#stage.on-lime #prog { background: var(--ink); }
+#fx { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
+.nav { position: fixed; right: 18px; bottom: 18px; display: flex; gap: 8px; z-index: 100; opacity: .25; transition: opacity .3s; }
+.nav:hover, body.moving .nav { opacity: 1; }
+.nav button { width: 48px; height: 48px; border-radius: 50%; border: 0; background: rgba(197,248,42,.9); color: #12160C; font-size: 22px; font-weight: 800; cursor: pointer; }
+#notes { position: fixed; left: 0; right: 0; bottom: 0; max-height: 40vh; overflow: auto; background: rgba(18,22,12,.96); color: #F1F6E4; font: 18px/1.5 Manrope, Arial, sans-serif; padding: 18px 28px 18px; z-index: 90; transform: translateY(100%); transition: transform .3s; border-top: 3px solid #C5F82A; }
+#notes.on { transform: none; }
+#notes b { color: #C5F82A; }
+.overlay { position: fixed; inset: 0; background: rgba(11,14,7,.94); z-index: 95; display: none; overflow: auto; padding: 40px; color: #F1F6E4; font-family: Manrope, Arial, sans-serif; }
+.overlay.on { display: block; }
+.overlay h4 { font-family: Unbounded, Verdana, sans-serif; color: #C5F82A; font-size: 26px; margin-bottom: 20px; }
+#overview .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+#overview button { text-align: left; background: #1D2414; border: 1px solid #3A4628; color: #F1F6E4; border-radius: 12px; padding: 12px 14px; font-size: 16px; cursor: pointer; }
+#overview button:hover, #overview button.cur { background: #C5F82A; color: #12160C; }
+#overview button b { display: block; font-size: 13px; opacity: .7; }
+#help table { border-collapse: collapse; font-size: 20px; }
+#help td { padding: 8px 18px; border-bottom: 1px solid #3A4628; }
+#help td:first-child { font-family: 'JetBrains Mono', monospace; color: #C5F82A; }
+#hint { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: rgba(18,22,12,.9); color: #F1F6E4; font: 16px Manrope, Arial, sans-serif; padding: 10px 20px; border-radius: 999px; z-index: 100; transition: opacity .6s; pointer-events: none; }
+#hint b { color: #C5F82A; }
+
+/* syntax cheat sheet (слайды «Синтаксис для практики») */
+.syn { display: flex; flex-direction: column; gap: 10px; }
+.syn > div { display: flex; flex-direction: column; gap: 2px; background: var(--paper); border: 2px solid var(--line); border-left: 8px solid var(--lime); border-radius: 16px; padding: 10px 20px; }
+.syn code { font-family: var(--fm); font-size: 25px; font-weight: 700; color: var(--lime-d); white-space: nowrap; }
+.syn span { font-size: 24px; line-height: 1.3; color: var(--muted); }
+</style>
+<style>.slide pre.code,.flip .q,.syn code{white-space:pre-wrap;overflow-wrap:anywhere}.flip .q{max-width:100%;min-width:0}.split>*,.col{min-width:0}.editor pre,.editor textarea{white-space:pre-wrap;overflow-wrap:anywhere}</style></head>
+<body>
+<div id="stage">
+<canvas id="fx" width="1920" height="1080"></canvas>
+<div id="prog"></div>
+<div id="zoom"></div>
+<div id="alarm"><div class="al-emo"></div><div class="al-title"></div><div class="al-sub"></div></div>
+<!-- ============ СТАРТ ============ -->
+<section class="slide dark" id="cover" data-demo="cover" data-sec="Старт" data-nofoot style="justify-content:space-between">
+  <div class="blob" style="left:1100px;top:80px;width:760px;height:760px"></div>
+  <div class="blob" style="left:-120px;top:760px;width:380px;height:380px;animation-delay:-4s"></div>
+  <div class="col" style="gap:40px">
+    <span class="pill a">Модуль 1 · Введение в JavaScript</span>
+    <h1 class="a" style="font-size:110px;width:1100px">Урок 2. <span class="hl">Функции</span></h1>
+    <p class="a s36 muted" style="width:1000px">Пишем код один раз — используем сколько угодно. Параметры, return, стрелки, рекурсия и замыкания.</p>
+  </div>
+  <p class="a s28 muted">Преподаватель: [Имя Фамилия] · [дата]</p>
+  <div id="jsBadge" title="Нажми!" style="font-size:120px">ƒ()</div>
+  <div id="typer" data-text="const fun = () => '😄';"></div>
+  <aside class="notes">Нажмите на значок ƒ() — салют. Сегодня главная тема курса: функции. Без них дальше не написать ни одной нормальной программы.</aside>
+</section>
+
+<section class="slide" data-demo="rules" data-sec="Старт" style="gap:36px">
+  <div class="between a"><h2>Правила — всё ещё в силе 😎</h2><span class="pill dk" style="transform:rotate(2deg)">нарушил → решаешь у доски 😈</span></div>
+  <div class="grid g3" style="gap:28px">
+    <div class="card rule a pop" data-alarm="phone">
+      <div class="rule-art"><span class="emo-big vibe">📱</span><span class="zzz">бззз… бззз…</span><span class="stamp">НЕЛЬЗЯ</span></div>
+      <h3>Телефоны — в рюкзак</h3>
+      <p class="s26 muted">Зазвонил на уроке — рассказываешь анекдот про JavaScript 🎤</p>
+    </div>
+    <div class="card rule a pop" data-alarm="shh">
+      <div class="rule-art"><span class="bla b1">бла-бла</span><span class="bla b2">а вчера…</span><span class="bla b3">ля-ля</span><span class="emo-big zip">🤐</span></div>
+      <h3>Никакой болтологии</h3>
+      <p class="s26 muted">Вопрос — поднимаешь руку ✋. Болтаешь — объясняешь следующую тему вместо меня.</p>
+    </div>
+    <div class="card rule a pop" data-alarm="love">
+      <div class="rule-art"><span class="emo-big swap s-a">😤</span><span class="emo-big swap s-b">🤗</span><span class="heart">❤️</span></div>
+      <h3>Никаких оскорблений</h3>
+      <p class="s26 muted">Смеёмся над багами, а не над людьми.</p>
+    </div>
+  </div>
+  <div class="bar a" style="gap:18px"><button class="btn dk" data-alarm="phone">🚨 Тревога: телефон</button><button class="btn dk" data-alarm="shh">🤫 Тишина</button><button class="btn ghost" data-alarm="love">🤝 Мир</button><span class="hint">В любой момент урока: клавиши P · S · M</span></div>
+  <aside class="notes">Короткое напоминание правил. Тревоги работают на любом слайде: P — телефон, S — тишина, M — мир.</aside>
+</section>
+
+<section class="slide" data-sec="Старт">
+  <h2 class="a">План на 3 часа</h2>
+  <div class="tbar">
+    <i class="ot" style="flex:20;--i:0">Старт</i><i class="th" style="flex:50;--i:1">Теория 1 · 50</i><i class="pr" style="flex:25;--i:2">Практика · 20+5</i><i class="ot" style="flex:10;--i:3">☕</i><i class="th" style="flex:40;--i:4">Теория 2 · 40</i><i class="pr" style="flex:25;--i:5">Практика · 20+5</i><i class="ot" style="flex:10;--i:6">ДЗ</i>
+  </div>
+  <table class="t a" style="font-size:28px">
+    <thead><tr><th style="width:18%">Время</th><th style="width:20%">Блок</th><th>Что делаем</th></tr></thead>
+    <tbody>
+      <tr><td>0:00–0:20</td><td>Старт</td><td>Шаблонные строки ${}, разминка</td></tr>
+      <tr><td>0:20–1:10</td><td>Теория 1</td><td>Функции, параметры, return, стрелки, видимость + синтаксис для практики</td></tr>
+      <tr class="hl"><td>1:10–1:35</td><td>Практика 1</td><td>«Журнал оценок»: 20 минут + 5 минут разбор</td></tr>
+      <tr><td>1:35–1:45</td><td>Перерыв</td><td>Кофе, воздух, вопросы</td></tr>
+      <tr><td>1:45–2:25</td><td>Теория 2</td><td>Массив за 3 минуты, rest, spread, рекурсия, замыкания + синтаксис</td></tr>
+      <tr class="hl"><td>2:25–2:50</td><td>Практика 2</td><td>«Футбольный матч»: 20 минут + 5 минут разбор</td></tr>
+      <tr><td>2:50–3:00</td><td>Финиш</td><td>ДЗ «Тамагочи» + шпаргалка к нему, итоги</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">Первые 20 минут — шаблонные строки (долг с урока 1) и разминка. Практики теперь по 20 минут + 5 минут разбора; освободившееся время ушло на слайды «Синтаксис для практики» — на них разбирается всё, что понадобится в задаче.</aside>
+</section>
+
+<section class="slide" data-sec="Старт">
+  <div class="split" style="grid-template-columns:680px 1fr;gap:44px;flex:1">
+    <div class="col" style="gap:18px">
+      <h2 class="a" style="font-size:40px;white-space:nowrap">Шаблонные строки <span class="mono hl">${}</span></h2>
+      <div class="syn a"><div><code>`текст`</code><span>обратные кавычки — клавиша Ё в английской раскладке</span></div><div><code>${выражение}</code><span>вставляет значение: переменную, расчёт, вызов функции</span></div><div><code>'…' + x + '…'</code><span>старый способ — склейка, легко забыть пробел</span></div><div><code>'${x}'</code><span>в обычных кавычках ${} не работает — просто текст</span></div></div>
+      <div class="console a" data-con-slot style="flex:1;min-height:120px"></div>
+    </div>
+    <div class="runner a" data-h="756" data-fs="22" data-lh="1.45" data-slot>
+<textarea>const name = 'Аня';
+const age = 19;
+
+// старый способ — склейка через +
+console.log('Привет, ' + name + '! Тебе ' + age);
+
+// шаблонная строка: `обратные кавычки` и ${}
+console.log(`Привет, ${name}! Тебе ${age}`);
+
+// внутри ${} — любое выражение
+console.log(`Через год тебе будет ${age + 1}`);
+console.log(`Скидка: ${age &lt; 25 ? 'да 🎉' : 'нет'}`);
+
+// в обычных кавычках ${} — просто текст
+console.log('Привет, ${name}');
+
+// можно писать в несколько строк
+console.log(`Чек:
+  кофе × 2
+  итого: ${5 * 2} AZN`);</textarea>
+    </div>
+  </div>
+  <aside class="notes">На уроке 1 шаблонные строки были в решениях, но отдельно не разбирались — закрываем долг. Запустите и сравните первые две строки: результат одинаковый, но вторую легче читать. Спросите: что выведет строка в обычных кавычках? Ответ — сам текст ${name}, без подстановки. Пусть каждый найдёт у себя на клавиатуре обратную кавычку.</aside>
+</section>
+
+<section class="slide dark" data-demo="flip" data-sec="Разминка" style="gap:44px">
+  <div class="between a"><h2>Разминка: что выведет?</h2><span class="pill" style="transform:rotate(-3deg)">вспоминаем урок 1</span></div>
+  <div class="grid g3" style="gap:28px">
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">1</b><code class="q">'3' * '4'</code></div><div class="b"><b class="ans">12</b><p>* переводит строки в числа</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">2</b><code class="q">null ?? 'гость'</code></div><div class="b"><b class="ans">'гость'</b><p>?? — значение по умолчанию</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">3</b><code class="q">5 === '5'</code></div><div class="b"><b class="ans">false</b><p>Разные типы: number и string</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">4</b><code class="q">10 % 4</code></div><div class="b"><b class="ans">2</b><p>10 = 4 · 2 + 2</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">5</b><code class="q">Boolean('0')</code></div><div class="b"><b class="ans">true</b><p>Непустая строка — truthy</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">6</b><code class="q sm">let i = 0;
+while (i &lt; 3) i++;
+i</code></div><div class="b"><b class="ans">3</b><p>Цикл остановился, когда i стало 3</p></div></div></div>
+  </div>
+  <aside class="notes">Разминка на 5 минут: группа отвечает хором, потом переворачивайте карточки. Если на каком-то вопросе много ошибок — 1–2 минуты повторения.</aside>
+</section>
+
+<!-- ============ ТЕОРИЯ 1 ============ -->
+<section class="slide lime center" data-sec="Теория 1" data-nofoot>
+  <p class="bignum" style="right:100px;top:80px;font-size:400px">01</p>
+  <span class="pill dk a">Теория · 50 минут</span>
+  <h1 class="a" style="width:1300px">Функции: основы</h1>
+  <p class="a s32 muted" style="width:1300px;line-height:1.5">Что такое функция · объявление · параметры и аргументы · return · function expression · стрелочные функции · область видимости · синтаксис для практики</p>
+  <aside class="notes">Цель первой теории — чтобы каждый мог написать функцию с параметрами и return, вызвать её и понять, где «живут» переменные.</aside>
+</section>
+
+<section class="slide" data-demo="juice" data-sec="Теория 1" style="gap:32px">
+  <div class="between a"><h2>Функция — это машина 🧃</h2><span class="pill">выжато соков: <b data-juice-count>0</b></span></div>
+  <div class="row" style="align-items:center;gap:40px">
+    <div class="col a left" style="flex:0 0 520px;gap:22px">
+      <p class="s28">Даёшь <b>на вход</b> значение — получаешь <b>на выходе</b> результат. Внутри — код, который пишется один раз.</p>
+      <p class="s26 muted">Выберите, что положить в машину:</p>
+      <div class="chips" data-fruits style="gap:14px"></div>
+    </div>
+    <div class="juicer a pop">
+      <div class="jin" data-jin>?</div>
+      <div class="jbox" data-jbox>
+        <pre class="code s24" style="background:transparent;padding:0">function makeJuice(fruit) {
+  return `сок из ${fruit}`;
+}</pre>
+      </div>
+      <div class="jout" data-jout><span class="emo-big" style="font-size:96px">🧃</span><p class="mono s26" data-jres>…</p></div>
+    </div>
+  </div>
+  <p class="a s28"><b>Функция</b> — именованный блок кода, который можно вызвать много раз: <span class="mono hl">makeJuice('🍎')</span></p>
+  <aside class="notes">Нажимайте фрукты: фрукт «залетает» в машину, она трясётся и выдаёт сок. Попробуйте носок 🧦 — машина выдаёт ошибку, как функция, которой дали не тот аргумент. Главное: вход (параметр) → код внутри → выход (return).</aside>
+</section>
+
+<section class="slide" data-sec="Теория 1" style="gap:36px">
+  <h2 class="a">Зачем нужны функции</h2>
+  <div class="row">
+    <div class="card rd a left" style="gap:14px">
+      <h3>Без функций 🙈</h3>
+      <pre class="code s24" style="padding:24px 28px">alert('Привет, Аня! Добро пожаловать!');
+alert('Привет, Вова! Добро пожаловать!');
+alert('Привет, Лейла! Добро пожаловать!');
+// а теперь поменяй текст в 50 местах…</pre>
+      <p class="s26 muted">Ctrl+C, Ctrl+V — профессия «копипастер»</p>
+    </div>
+    <div class="card dk a" style="gap:14px">
+      <h3>С функцией 😎</h3>
+      <pre class="code s24" style="padding:24px 28px;background:#0E1209">function greet(name) {
+  alert(`Привет, ${name}! Добро пожаловать!`);
+}
+greet('Аня');  greet('Вова');  greet('Лейла');</pre>
+      <p class="s26 muted">Текст меняется в одном месте</p>
+    </div>
+  </div>
+  <div class="row a" style="gap:24px">
+    <p class="note" style="text-align:center">♻️ Не повторяться (DRY)</p>
+    <p class="note" style="text-align:center">🧩 Делить задачу на части</p>
+    <p class="note" style="text-align:center">🏷 Давать коду понятные имена</p>
+  </div>
+  <aside class="notes">DRY — Don't Repeat Yourself. Спросите: в Банкомате из ДЗ что повторялось? (проверка суммы, вывод баланса) — это кандидаты в функции.</aside>
+</section>
+
+<section class="slide" data-demo="anatomy" data-sec="Теория 1" style="gap:40px">
+  <h2 class="a">Анатомия функции</h2>
+  <pre class="code a" style="font-size:44px;padding:48px 56px;line-height:1.5" data-static data-anat><span class="seg" data-s="1">function</span> <span class="seg" data-s="2">greet</span>(<span class="seg" data-s="3">name</span>) <span class="seg" data-s="4">{
+  <span class="seg" data-s="5">return</span> `Привет, ${name}!`;
+}</span>
+
+<span class="seg" data-s="6">greet('Аня')</span>;  <span style="color:#8C9A76">// 'Привет, Аня!'</span></pre>
+  <div class="grid g3 a" style="gap:14px" data-legend>
+    <button class="chip" data-s="1">1 · function — ключевое слово</button>
+    <button class="chip" data-s="2">2 · greet — имя (глагол!)</button>
+    <button class="chip" data-s="3">3 · name — параметр</button>
+    <button class="chip" data-s="4">4 · { … } — тело функции</button>
+    <button class="chip" data-s="5">5 · return — вернуть результат</button>
+    <button class="chip" data-s="6">6 · greet('Аня') — вызов</button>
+  </div>
+  <aside class="notes">Части подсвечиваются по очереди сами, можно и кликать по легенде. Правило имён: функция что-то ДЕЛАЕТ, поэтому имя — глагол: getTotal, showMenu, isValid. Без скобок greet — это сама функция, со скобками greet() — её вызов.</aside>
+</section>
+
+<section class="slide" data-demo="callb" data-sec="Теория 1" style="gap:32px">
+  <h2 class="a">Параметры и аргументы</h2>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <div class="col a left" style="flex:0 0 560px;gap:20px">
+      <p class="s28"><b>Параметр</b> — переменная в объявлении: <span class="mono hl">name</span>, <span class="mono hl">age</span>.</p>
+      <p class="s28"><b>Аргумент</b> — значение при вызове: <span class="mono hl">'Аня'</span>, <span class="mono hl">20</span>.</p>
+      <p class="s28">Не передали аргумент — параметр равен <b>undefined</b>. Или значению <b>по умолчанию</b>.</p>
+    </div>
+    <div class="card dk a pop" style="gap:18px">
+      <pre class="code s28" style="background:transparent;padding:0">function greet(name, age = 18) {
+  return `Привет, ${name}! Тебе ${age}`;
+}</pre>
+      <div class="expr-row" style="flex-wrap:wrap"><span class="mono s28">greet(</span><input class="inp" data-a1 value="'Аня'" spellcheck="false" style="width:220px;flex:none"><span class="mono s28">,</span><input class="inp" data-a2 value="20" spellcheck="false" style="width:140px;flex:none"><span class="mono s28">)</span></div>
+      <div class="state" data-map></div>
+      <p class="mono s28" style="color:var(--lime)" data-res></p>
+      <div class="chips"><button class="chip" data-pre="'Аня'|20">оба аргумента</button><button class="chip" data-pre="'Вова'|">без age</button><button class="chip" data-pre="|">без аргументов</button></div>
+    </div>
+  </div>
+  <aside class="notes">Меняйте аргументы — JS вызывает функцию по-настоящему. Сотрите второй аргумент — сработает значение по умолчанию 18. Сотрите оба — name станет undefined, и это видно в результате. Аргументы передаются по порядку: первый — в первый параметр.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 1">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:26px">
+      <h2 class="a">return</h2>
+      <p class="a">Возвращает результат <b>и сразу выходит</b> из функции. Код после return не выполняется.</p>
+      <p class="a muted">Нет return — функция вернёт <b style="color:var(--ink)">undefined</b>.</p>
+      <p class="a note">alert показывает, а return — отдаёт значение дальше</p>
+    </div>
+    <div class="runner a" data-h="540">
+<textarea>function square(n) {
+  return n * n;
+  console.log('Меня никто не увидит 😢');
+}
+
+function shout(text) {
+  console.log(text + '!!!');   // нет return
+}
+
+console.log(square(5));          // 25
+console.log(square(square(2)));  // 16
+console.log(shout('Эй'));        // ?</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: строка после return не печатается, а shout печатает «Эй!!!», но сама возвращает undefined — поэтому вторая строка в консоли будет undefined. Частая ошибка студентов: alert внутри функции вместо return, а потом результат нельзя использовать.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 1">
+  <div class="split" style="grid-template-columns:620px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a" style="font-size:54px">Declaration и Expression</h2>
+      <div class="card a tight"><h3 class="mono" style="color:var(--lime-d);font-size:28px">function sayHi() {}</h3><p class="s26 muted">Function Declaration — можно вызывать <b style="color:var(--ink)">до</b> объявления (всплытие)</p></div>
+      <div class="card dk a tight"><h3 class="mono" style="font-size:28px">const sayBye = function () {}</h3><p class="s26 muted">Function Expression — функция как значение переменной, только <b style="color:#F1F6E4">после</b> объявления</p></div>
+    </div>
+    <div class="runner a" data-h="500">
+<textarea>console.log(sayHi('Аня'));   // работает до объявления!
+
+function sayHi(name) {
+  return `Привет, ${name}`;
+}
+
+console.log(sayBye('Аня'));  // а тут?
+
+const sayBye = function (name) {
+  return `Пока, ${name}`;
+};</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: первая строка печатает «Привет, Аня», вторая — ReferenceError: Cannot access 'sayBye' before initialization. Перенесите console.log(sayBye…) в конец — заработает. Объясните слово «всплытие» (hoisting): объявления function «поднимаются» наверх ещё до выполнения кода.</aside>
+</section>
+
+<section class="slide" data-demo="arrowm" data-sec="Теория 1" style="gap:32px">
+  <div class="between a"><h2>Стрелочные функции =&gt;</h2><span class="pill" data-arrow-len>0 символов</span></div>
+  <div class="row" style="align-items:center;gap:40px">
+    <div class="col a left" style="flex:0 0 520px;gap:22px">
+      <p class="s28" data-arrow-cap>Обычная функция. Нажмите «Сжать» 🗜</p>
+      <div class="bar"><button class="btn dk" data-act="next">🗜 Сжать</button><button class="btn ghost" data-act="reset">↺</button></div>
+      <p class="s26 muted">Короткая запись для маленьких функций. Тело из одного выражения — return не нужен.</p>
+    </div>
+    <pre class="code a pop" data-arrow style="font-size:40px;padding:48px 56px;min-height:300px;flex:1;transition:transform .3s"></pre>
+  </div>
+  <table class="t mono a" style="font-size:26px">
+    <tbody>
+      <tr><td style="width:40%">(a, b) =&gt; a + b</td><td>два параметра — скобки нужны</td></tr>
+      <tr><td>n =&gt; n * 2</td><td>один параметр — скобки можно опустить</td></tr>
+      <tr><td>() =&gt; 'Привет'</td><td>без параметров — пустые скобки</td></tr>
+      <tr><td>(a, b) =&gt; { … return … }</td><td>несколько строк — фигурные скобки и return</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">Нажимайте «Сжать»: функция по шагам превращается в стрелочную, справа вверху видно, как уменьшается число символов. Важно: у стрелок нет своего arguments (это увидим во второй теории) и своего this (это модуль ООП).</aside>
+</section>
+
+<section class="slide" data-demo="scope" data-sec="Теория 1" style="gap:30px">
+  <h2 class="a">Область видимости</h2>
+  <div class="row" style="gap:40px;align-items:stretch">
+    <div class="scope a pop" data-z="global">
+      <p class="zt">🌍 global</p><p class="mono s26">const school = 'IT Step';</p>
+      <div class="scope" data-z="fn">
+        <p class="zt">📦 function lesson()</p><p class="mono s26">const topic = 'функции';</p>
+        <div class="scope" data-z="block">
+          <p class="zt">🧱 if { … }</p><p class="mono s26">const secret = '🤫';</p>
+        </div>
+      </div>
+    </div>
+    <div class="col a" style="flex:0 0 560px;gap:16px">
+      <p class="s28">JS ищет переменную <b>изнутри наружу</b>. Наружу видно — внутрь нет.</p>
+      <button class="btn dk" data-q="block|school" style="align-self:flex-start">Из if ищем school</button>
+      <button class="btn dk" data-q="fn|secret" style="align-self:flex-start">Из функции ищем secret</button>
+      <button class="btn dk" data-q="global|topic" style="align-self:flex-start">Из global ищем topic</button>
+      <div class="console" data-con style="height:150px"></div>
+    </div>
+  </div>
+  <aside class="notes">Нажимайте вопросы: подсвечивается каждая «коробка», в которой JS ищет переменную, — от внутренней к внешней. school находится в global — его видно отовсюду. secret и topic спрятаны внутри — снаружи ReferenceError. Аналогия: из своей комнаты видно и квартиру, и улицу, а с улицы в комнату не заглянуть.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 1">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a">Локальные и глобальные</h2>
+      <p class="a s28"><b>Локальная</b> переменная живёт только внутри функции и исчезает после её выполнения.</p>
+      <p class="a s28"><b>Глобальная</b> видна везде — и её легко случайно испортить.</p>
+      <p class="a s28"><b>Затенение:</b> внутренняя переменная с тем же именем «прячет» внешнюю.</p>
+      <p class="a note">Правило: данные в функцию — через параметры, наружу — через return</p>
+    </div>
+    <div class="runner a" data-h="565" data-fs="22">
+<textarea>let score = 10;                 // глобальная
+
+function bonus() {
+  let score = 100;              // локальная, затеняет
+  console.log('внутри:', score);
+}
+
+function spoil() {
+  score = 0;                    // портит глобальную 😱
+}
+
+bonus();
+console.log('снаружи:', score);
+spoil();
+console.log('после spoil:', score);</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: внутри 100, снаружи 10 — затенение. После spoil глобальная стала 0: функция без let изменила внешнюю переменную. Вот почему в практике на продвинутом уровне требуется обходиться без глобальных переменных.</aside>
+</section>
+
+<section class="slide dark" data-demo="flip" data-sec="Теория 1" style="gap:44px">
+  <div class="between a"><h2>Квиз: что вернёт?</h2><span class="pill" style="transform:rotate(-3deg)">нажмите на карточку</span></div>
+  <div class="grid g3" style="gap:28px">
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">1</b><code class="q sm">function f() {}
+f()</code></div><div class="b"><b class="ans">undefined</b><p>Нет return — нет результата</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">2</b><code class="q sm">const f = (a, b = 2) => a * b;
+f(5)</code></div><div class="b"><b class="ans">10</b><p>b взяло значение по умолчанию</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">3</b><code class="q sm">function f(x) {
+  return;
+  x * 2; }
+f(3)</code></div><div class="b"><b class="ans">undefined</b><p>return без значения — сразу выход</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">4</b><code class="q sm">typeof function () {}</code></div><div class="b"><b class="ans">'function'</b><p>Функция — тоже значение</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">5</b><code class="q sm">let x = 1;
+function f() { let x = 2; }
+f(); x</code></div><div class="b"><b class="ans">1</b><p>Внутренний x — другой, локальный</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">6</b><code class="q sm">const sq = n => n * n;
+sq(sq(2))</code></div><div class="b"><b class="ans">16</b><p>sq(2) = 4, sq(4) = 16</p></div></div></div>
+  </div>
+  <aside class="notes">Ответы: undefined, 10, undefined, 'function', 1, 16. Вопрос 3 — ловушка: многие скажут 6.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 1">
+  <div class="split" style="grid-template-columns:680px 1fr;gap:44px;flex:1">
+    <div class="col" style="gap:18px">
+      <h2 class="a" style="font-size:40px;white-space:nowrap">Синтаксис для практики 1</h2>
+      <div class="syn a"><div><code>avg.toFixed(2)</code><span>округлить до 2 знаков (получится строка)</span></div><div><code>Number.isInteger(x)</code><span>true, если x — целое число</span></div><div><code>do { … } while (плохо)</code><span>спрашивать снова, пока ответ не подходит</span></div><div><code>a || 'запасное'</code><span>пустая строка или null → берётся правое</span></div><div><code>if (…) return …;</code><span>ранний выход — else не нужен</span></div><div><code>f(g(1), g(2))</code><span>результат одной функции — аргумент другой</span></div></div>
+      <div class="console a" data-con-slot style="flex:1;min-height:120px"></div>
+    </div>
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.3" data-slot>
+<textarea>// 1. toFixed — округлить (результат — строка)
+const avg = 28 / 3;
+console.log(avg);               // 9.333333333333334
+console.log(avg.toFixed(2));    // 9.33
+
+// 2. Number.isInteger — целое ли число?
+console.log(Number.isInteger(7), Number.isInteger(7.5));
+console.log(Number.isInteger(Number('abc')));  // NaN → false
+
+// 3. do…while — спрашиваем, пока не подходит
+let n;
+do {
+  n = Number(prompt('Число от 1 до 12:'));
+} while (!Number.isInteger(n) || n &lt; 1 || n &gt; 12);
+console.log('принято:', n);
+
+// 4. || — запасное значение для пустой строки
+console.log('' || 'Студент 1', '|', 'Аня' || 'Студент 1');
+
+// 5. ранний return + вызов внутри вызова
+function check(avg) {
+  if (avg &gt;= 10) return 'отлично 🏆';
+  return 'ещё поработаем';
+}
+const half = (x) =&gt; x / 2;
+console.log(check(half(24)), '|', check(half(10)));</textarea>
+    </div>
+  </div>
+  <aside class="notes">Разберите каждую строку таблицы и запустите код. В пункте 3 введите сначала 15, потом «абв», потом 7 — цикл переспрашивает, пока не получит целое от 1 до 12. Подчеркните: условие в while — это «когда спрашивать снова», то есть ответ ПЛОХОЙ. В пункте 4 пустое имя заменилось на «Студент 1», а «Аня» осталась. Пункт 5: check(half(24)) — сначала считается half(24) = 12, потом check(12).</aside>
+</section>
+<!-- ============ ПРАКТИКА 1 ============ -->
+<section class="slide lime" data-sec="Практика 1">
+  <p class="bignum" style="right:120px;bottom:40px;font-size:300px">P1</p>
+  <div class="split" style="grid-template-columns:640px 1fr;gap:64px;flex:1">
+    <div class="col" style="gap:26px">
+      <span class="pill dk a">Практика · 20 минут + 5 разбор</span>
+      <h1 class="a" style="font-size:66px;line-height:1.1;letter-spacing:-1px">Функции, параметры, return</h1>
+      <div class="a" data-timer="20" style="display:flex;flex-direction:column;gap:14px">
+        <p class="timer">20:00</p>
+        <div class="bar"><button class="btn dk" data-t="go">▶ Старт</button><button class="btn ghost" data-t="reset">↺</button></div>
+      </div>
+      <div class="a" data-picker style="display:flex;align-items:center;gap:24px">
+        <button class="btn dk">🎲 Кто показывает?</button><span class="picker-num">?</span>
+      </div>
+    </div>
+    <div class="card dk a pop" style="padding:44px;gap:20px;align-self:flex-start">
+      <h3>Требования для всех уровней</h3>
+      <ol class="s28" style="line-height:1.5">
+        <li>Файл practice-1.html + js/practice-1.js с defer</li>
+        <li>Каждая функция делает одно дело и отдаёт результат через return</li>
+        <li>Имена функций — глаголы: getStatus, askGrade</li>
+        <li>alert — только в конце, не внутри функций</li>
+      </ol>
+      <p class="s26 muted">Успели раньше? 3 самопроверки: console.log(average(12, 9, 6) === 9) должно напечатать true.</p>
+    </div>
+  </div>
+  <aside class="notes">Таймер работает и при переходе на другие слайды. «Кто показывает?» выбирает номер 1–19 без повторов. Задача одна на всех, три уровня — до 6, до 9, до 12 баллов.</aside>
+</section>
+
+<section class="slide" data-sec="Практика 1" style="gap:30px">
+  <h2 class="a">Практика 1 · Журнал оценок 📒</h2>
+  <div class="row a" style="align-items:center">
+    <p class="s28">Задача одна на всех. Программа считает средний балл по 12-балльной системе и ставит статус. Каждое действие — отдельная функция.</p>
+    <pre class="code s24" data-static style="flex:0 0 620px;padding:22px 28px">Аня: 9.33 — хорошо 👍
+Вова: 11.00 — отлично 🏆
+Средний балл группы: 10.17</pre>
+  </div>
+  <div class="grid g3 lvls">
+    <div class="lvl a pop"><span class="pill">Базовый · 1–6 баллов</span><ul><li><b>average(a, b, c)</b> — среднее трёх оценок</li><li><b>getStatus(avg)</b>: 10–12 «отлично», 7–9 «хорошо», 4–6 «удовл.», 1–3 «надо подтянуть»</li><li>Имя и 3 оценки через prompt → alert через ${} и toFixed(2)</li></ul></div>
+    <div class="lvl mid a pop"><span class="pill dk">Средний · 7–9 баллов</span><ul><li><b>askGrade(question)</b> — стрелочная, через do…while переспрашивает, пока не целое 1–12</li><li>getStatus — function expression</li></ul></div>
+    <div class="lvl top a pop"><span class="pill">Продвинутый · 10–12 баллов</span><ul><li><b>runJournal(count = 3)</b> опрашивает count студентов</li><li>Итог: средний балл группы и номер лучшего</li><li>Пустое имя → «Студент N» через ||</li></ul></div>
+  </div>
+  <aside class="notes">20 минут: примерно 8 на базовый, 6 на средний, 6 на продвинутый. Весь нужный синтаксис был на слайде «Синтаксис для практики» — если студент застрял, отправляйте его туда. Шкала: 10–12 отлично, 7–9 хорошо, 4–6 удовлетворительно, 1–3 надо подтянуть. Подсказка: getStatus проще всего писать с ранним return: if (avg &gt;= 10) return 'отлично'; …</aside>
+</section>
+
+<section class="slide" data-sec="Практика 1">
+  <div class="split" style="grid-template-columns:1fr 440px;gap:48px;flex:1">
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.35" data-slot>
+<textarea>// ── Базовый ──
+function average(a, b, c) {
+  return (a + b + c) / 3;
+}
+const getStatus = function (avg) {        // function expression
+  if (avg &gt;= 10) return 'отлично 🏆';
+  if (avg &gt;= 7) return 'хорошо 👍';
+  if (avg &gt;= 4) return 'удовлетворительно';
+  return 'надо подтянуть 📚';
+};
+// ── Средний ──
+const askGrade = (question) =&gt; {
+  let grade;
+  do {
+    grade = Number(prompt(question));
+  } while (!Number.isInteger(grade) || grade &lt; 1 || grade &gt; 12);
+  return grade;
+};
+
+const name = prompt('Имя студента:');
+const avg = average(askGrade('Оценка 1:'), askGrade('Оценка 2:'), askGrade('Оценка 3:'));
+alert(`${name}: ${avg.toFixed(2)} — ${getStatus(avg)}`);</textarea>
+    </div>
+    <div class="col" style="gap:22px">
+      <span class="pill a">Решение · базовый + средний</span>
+      <h2 class="a" style="font-size:52px">Журнал оценок</h2>
+      <ul class="a s26" style="line-height:1.45;display:flex;flex-direction:column;gap:10px"><li>Ранний return в getStatus — без else</li><li>askGrade прячет цикл проверки внутри себя</li><li>Вызовы вкладываются: average(askGrade(…), …)</li><li>Number.isInteger — проверка на целое</li></ul>
+      <div class="console a" data-con-slot style="flex:1;min-height:150px"></div>
+    </div>
+  </div>
+  <p class="sticker" style="left:890px;top:895px;width:330px">Сравни со своим 👀</p>
+  <aside class="notes">Запустите и введите имя и три оценки (попробуйте ввести 15 или буквы — askGrade переспросит). Обратите внимание на строку с average(askGrade(…), askGrade(…), askGrade(…)) — результат одной функции сразу становится аргументом другой. Number.isInteger(x) — новая для них функция: true, если x целое.</aside>
+</section>
+
+<section class="slide" data-sec="Практика 1">
+  <div class="split" style="grid-template-columns:1fr 440px;gap:48px;flex:1">
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.35" data-slot>
+<textarea>// функции с прошлого слайда — коротко
+const average = (a, b, c) =&gt; (a + b + c) / 3;
+function askGrade(q) {
+  let g;
+  do g = Number(prompt(q)); while (!(g &gt;= 1 &amp;&amp; g &lt;= 12));
+  return g;
+}
+// ── Продвинутый ──
+function processStudent(index) {
+  const name = prompt(`Имя студента №${index}:`) || `Студент ${index}`;
+  const avg = average(askGrade('Оценка 1'), askGrade('Оценка 2'), askGrade('Оценка 3'));
+  console.log(`${name}: ${avg.toFixed(2)}`);
+  return avg;
+}
+function runJournal(count = 3) {
+  let sum = 0, best = 0, bestIndex = 0;
+  for (let i = 1; i &lt;= count; i++) {
+    const avg = processStudent(i);
+    sum += avg;
+    if (avg &gt; best) { best = avg; bestIndex = i; }
+  }
+  alert(`Средний балл группы: ${(sum / count).toFixed(2)} · лучший — №${bestIndex}`);
+}
+// бонус «Успели раньше?»: самопроверки
+console.log(average(12, 9, 6) === 9, average(3, 3, 3) === 3, average(1, 2, 3) === 2);
+runJournal();</textarea>
+    </div>
+    <div class="col" style="gap:22px">
+      <span class="pill a">Решение · продвинутый</span>
+      <h2 class="a" style="font-size:52px">Журнал PRO 🏆</h2>
+      <ul class="a s26" style="line-height:1.45;display:flex;flex-direction:column;gap:10px"><li>processStudent возвращает число — его копит runJournal</li><li>Все переменные живут внутри функций</li><li>Пустое имя → «Студент N» через ||</li><li>Бонус: самопроверки печатают true true true</li></ul>
+      <div class="console a" data-con-slot style="flex:1;min-height:150px"></div>
+    </div>
+  </div>
+  <p class="sticker" style="left:890px;top:895px;width:330px">Сравни со своим 👀</p>
+  <aside class="notes">Запустите: сначала в консоли появятся три true — это самопроверки. Потом опрос трёх студентов. Пустое имя заменяется на «Студент N» через ||. Глобальных переменных нет: sum, best, bestIndex живут только внутри runJournal.</aside>
+</section>
+
+<section class="slide dark center" data-demo="pause" data-sec="Перерыв" style="align-items:center;gap:30px">
+  <div class="blob" style="left:640px;top:120px;width:640px;height:640px"></div>
+  <p class="mono s36 a" style="color:var(--lime)">const rest = () => '☕';  rest();</p>
+  <div class="ring a pop">
+    <svg viewBox="0 0 420 420"><circle cx="210" cy="210" r="190" fill="none" stroke="#3A4628" stroke-width="18"/><circle data-ring cx="210" cy="210" r="190" fill="none" stroke="#C5F82A" stroke-width="18" stroke-linecap="round" stroke-dasharray="1193.8" stroke-dashoffset="0"/></svg>
+    <p class="timer" data-pause-time>10:00</p>
+  </div>
+  <h1 class="a" style="font-size:110px">Перерыв</h1>
+  <p class="a s36 muted">10 минут · вызываем функцию rest()</p>
+  <aside class="notes">Таймер стартует сам, R — перезапуск. После перерыва — самое интересное: рекурсия и замыкания.</aside>
+</section>
+
+<!-- ============ ТЕОРИЯ 2 ============ -->
+<section class="slide lime center" data-sec="Теория 2" data-nofoot>
+  <p class="bignum" style="right:100px;top:80px;font-size:400px">02</p>
+  <span class="pill dk a">Теория · 40 минут</span>
+  <h1 class="a" style="width:1300px">Функции: уровень PRO</h1>
+  <p class="a s32 muted" style="width:1300px;line-height:1.5">массив за 3 минуты · arguments · rest · spread · рекурсия · стек вызовов · замыкания · синтаксис для практики</p>
+  <aside class="notes">Вторая теория сложнее: рекурсия и замыкания — темы, на которых «ломаются» многие. Не спешите, больше демонстраций.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:680px 1fr;gap:44px;flex:1">
+    <div class="col" style="gap:18px">
+      <h2 class="a" style="font-size:40px;white-space:nowrap">Массив за 3 минуты 📦</h2>
+      <div class="syn a"><div><code>[2, 0, 3, 1]</code><span>массив — список значений в квадратных скобках</span></div><div><code>goals[0]</code><span>элемент по номеру — счёт с нуля!</span></div><div><code>goals.length</code><span>сколько элементов в массиве</span></div><div><code>Math.max(…)  Math.min(…)</code><span>наибольшее и наименьшее из чисел</span></div></div>
+      <div class="console a" data-con-slot style="flex:1;min-height:120px"></div>
+    </div>
+    <div class="runner a" data-h="756" data-fs="22" data-lh="1.45" data-slot>
+<textarea>const goals = [2, 0, 3, 1];   // голы по матчам
+
+console.log(goals[0]);        // 2 — счёт с нуля!
+console.log(goals[3]);        // 1 — последний
+console.log(goals[10]);       // такого нет → ?
+console.log(goals.length);    // 4 — сколько элементов
+
+// обойти все элементы циклом
+let sum = 0;
+for (let i = 0; i &lt; goals.length; i++) {
+  console.log(`матч ${i + 1}: ${goals[i]} гол.`);
+  sum += goals[i];
+}
+console.log('всего голов:', sum);
+
+// Math — готовые функции для чисел
+console.log(Math.max(2, 0, 3, 1));   // 3
+console.log(Math.min(5, 10));        // 5</textarea>
+    </div>
+  </div>
+  <aside class="notes">Массивы — тема модуля 2, но rest-параметры собирают аргументы именно в массив, поэтому минимум нужен уже сейчас. Запустите: goals[10] даёт undefined — такого элемента нет. Главная ошибка новичков — считать с единицы: первый элемент goals[0], последний goals[goals.length - 1]. Цикл for (let i = 0; i &lt; goals.length; i++) — шаблон обхода массива, он будет в практике 2.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a">Объект arguments</h2>
+      <p class="a s28">Внутри обычной функции есть <b>arguments</b> — все переданные значения, даже «лишние».</p>
+      <p class="a s28"><b>arguments.length</b> — сколько аргументов передали. arguments[0] — первый.</p>
+      <p class="a s28 muted">У стрелочных функций своего arguments <b style="color:var(--ink)">нет</b> — они берут его у внешней функции.</p>
+      <p class="a note">Старый способ. Сегодня вместо него — rest</p>
+    </div>
+    <div class="runner a" data-h="580">
+<textarea>function info(a, b) {
+  console.log('передали аргументов:', arguments.length);
+  console.log('третий аргумент:', arguments[2]);
+}
+
+info(1, 2, 3, 4);
+info('только один');
+
+function outer() {
+  const arrow = () => arguments.length;
+  return arrow(1, 2, 3, 4, 5);
+}
+console.log('стрелка видит:', outer('один'));   // ?</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: передали 4 при двух параметрах — arguments.length = 4, третий аргумент виден. Последняя строка печатает 1, а не 5: у стрелки нет своего arguments, она берёт arguments внешней функции outer, которой передали один аргумент. arguments похож на массив, но им не является — у него нет удобных методов массивов.</aside>
+</section>
+
+<section class="slide" data-demo="rest" data-sec="Теория 2" style="gap:30px">
+  <h2 class="a">Rest-параметры ...</h2>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <div class="col a left" style="flex:0 0 600px;gap:20px">
+      <p class="s28">Три точки <b>в объявлении</b> собирают все аргументы в <b>массив</b>.</p>
+      <pre class="code s26">function sum(...numbers) {
+  let total = 0;
+  for (let i = 0; i &lt; numbers.length; i++) {
+    total += numbers[i];
+  }
+  return total;
+}</pre>
+      <p class="s26 muted">Массив — список значений: numbers[0] — первый, numbers.length — сколько их. Подробно — в модуле 2.</p>
+    </div>
+    <div class="card dk a pop" style="gap:20px">
+      <div class="expr-row"><span class="mono s28">sum(</span><input class="inp" data-args value="5, 10, 15, 20" spellcheck="false"><span class="mono s28">)</span></div>
+      <button class="btn" data-act="go" style="align-self:flex-start">▶ Собрать в массив</button>
+      <div class="chips" data-chips style="min-height:56px"></div>
+      <div class="restbox" data-box><span class="mono s26 muted">numbers = [ ]</span></div>
+      <p class="mono s28" style="color:var(--lime)" data-out></p>
+    </div>
+  </div>
+  <aside class="notes">Введите любые числа через запятую и нажмите ▶ — аргументы по одному «залетают» в массив numbers, потом функция считает сумму. Rest всегда последний параметр: function f(first, ...others).</aside>
+</section>
+
+<section class="slide" data-demo="spread" data-sec="Теория 2" style="gap:30px">
+  <h2 class="a">Spread ... — обратная операция</h2>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <div class="col a left" style="flex:0 0 600px;gap:20px">
+      <p class="s28">Три точки <b>при вызове</b> раскладывают массив на отдельные аргументы.</p>
+      <pre class="code s26">const scores = [7, 12, 9];
+
+Math.max(scores);     // NaN 😕
+Math.max(...scores);  // 12 ✓
+// то же, что Math.max(7, 12, 9)</pre>
+      <div class="row" style="gap:16px"><p class="note" style="text-align:center">rest: <b>собирает</b> 🧲</p><p class="note" style="text-align:center">spread: <b>раскладывает</b> 💥</p></div>
+    </div>
+    <div class="card dk a pop" style="gap:22px">
+      <div class="restbox" data-arr><span class="mono s26">scores = [7, 12, 9]</span></div>
+      <div class="bar"><button class="btn" data-act="go">💥 Math.max(...scores)</button><button class="btn ghost" data-act="bad">Math.max(scores)</button></div>
+      <div class="chips" data-chips style="min-height:56px"></div>
+      <p class="mono s28" style="color:var(--lime)" data-out></p>
+    </div>
+  </div>
+  <aside class="notes">Кнопка 💥 «взрывает» массив на отдельные числа, и Math.max находит максимум. Кнопка без точек показывает NaN — Math.max получил массив целиком и не понял, что с ним делать. Запоминалка: в объявлении — собирает, при вызове — раскладывает.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a">Рекурсия 🪆</h2>
+      <p class="a s28"><b>Рекурсия</b> — функция вызывает саму себя, каждый раз с задачей поменьше. Как матрёшка.</p>
+      <p class="a s28"><b>Базовый случай</b> — когда остановиться. Без него — бесконечность.</p>
+      <p class="a s28"><b>Рекурсивный шаг</b> — свести задачу к меньшей: 5! = 5 · 4!</p>
+      <p class="a note">Чтобы понять рекурсию, нужно понять рекурсию 😄</p>
+    </div>
+    <div class="runner a" data-h="580">
+<textarea>function factorial(n) {
+  if (n <= 1) return 1;          // базовый случай
+  return n * factorial(n - 1);   // рекурсивный шаг
+}
+
+function countdown(n) {
+  if (n === 0) return console.log('Пуск! 🚀');
+  console.log(n);
+  countdown(n - 1);
+}
+
+console.log(factorial(5));       // 120
+countdown(3);</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите. factorial(5) = 5 · 4 · 3 · 2 · 1 = 120. Покажите на доске: factorial(3) → 3 * factorial(2) → 2 * factorial(1) → 1. Следующий слайд показывает это анимацией.</aside>
+</section>
+
+<section class="slide" data-demo="stack" data-sec="Теория 2" style="gap:30px">
+  <h2 class="a">Стек вызовов: factorial(<span data-n-v>4</span>)</h2>
+  <div class="row" style="gap:48px;align-items:stretch">
+    <div class="col a left" style="flex:0 0 560px;gap:22px">
+      <p class="s28">Каждый вызов кладётся <b>на стек</b> и ждёт ответа сверху. Базовый случай — и стек начинает «разбираться».</p>
+      <div style="display:flex;align-items:center;gap:18px"><span class="mono s28" style="white-space:nowrap">n =</span><input type="range" min="1" max="6" value="4" data-n></div>
+      <div class="bar"><button class="btn dk" data-act="play">▶ Запуск</button><button class="btn ghost" data-act="reset">↺</button></div>
+      <p class="mono s28" data-out></p>
+    </div>
+    <div class="stack" data-stack></div>
+  </div>
+  <aside class="notes">Двигайте n и нажмите «Запуск»: вызовы растут столбиком вверх (каждый ждёт результат следующего), на factorial(1) — базовый случай, после этого кирпичики снимаются сверху вниз, и каждый возвращает своё значение. Это и есть стек вызовов — «стопка тарелок»: последней положили — первой сняли.</aside>
+</section>
+
+<section class="slide dark" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a">Забыли базовый случай 💥</h2>
+      <p class="a s28">Стек растёт, пока не кончится память: <b class="hl">RangeError: Maximum call stack size exceeded</b>.</p>
+      <p class="a s28 muted">Это знаменитый stack overflow — в честь него назван главный сайт программистов.</p>
+      <p class="a note">Всегда сначала пишите базовый случай</p>
+    </div>
+    <div class="runner a" data-h="540">
+<textarea>let calls = 0;
+
+function forever(n) {
+  calls++;
+  return forever(n + 1);    // где остановка?!
+}
+
+try {
+  forever(1);
+} catch (e) {
+  console.log(`💥 ${e.name} после ${calls} вызовов`);
+}</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: браузер падает с RangeError примерно после 10 000 вызовов (точное число зависит от браузера). try/catch здесь только чтобы показать число — его подробно пройдём в модуле 3. Рекурсию vs цикл: всё, что делает рекурсия, можно сделать циклом; рекурсия удобна для «вложенных» задач — папки в папках, дерево DOM.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:600px 1fr;flex:1">
+    <div class="col" style="gap:24px">
+      <h2 class="a">Замыкание 🎒</h2>
+      <p class="a s28">Функция <b>запоминает переменные</b> того места, где её создали, — даже когда внешняя функция уже закончилась.</p>
+      <p class="a s28">Как рюкзак: функция уносит с собой свои переменные.</p>
+      <p class="a note">Каждый вызов createCounter() — новый рюкзак со своим count</p>
+    </div>
+    <div class="runner a" data-h="620">
+<textarea>function createCounter() {
+  let count = 0;              // спрятано в «рюкзаке»
+  return function () {
+    count++;
+    return count;
+  };
+}
+
+const a = createCounter();
+const b = createCounter();
+
+console.log(a(), a(), a());   // 1 2 3
+console.log(b());             // 1 — у b свой count!
+console.log(count);           // ?</textarea>
+    </div>
+  </div>
+  <aside class="notes">Запустите: a считает 1 2 3, b начинает с 1 — у каждого счётчика свой count. Последняя строка — ReferenceError: снаружи count не видно, он «спрятан». Замыкания — способ сделать приватные данные. Следующий слайд — живая демонстрация с копилками.</aside>
+</section>
+
+<section class="slide" data-demo="piggy" data-sec="Теория 2" style="gap:30px">
+  <div class="between a"><h2>Копилки на замыканиях 🐷</h2><button class="btn dk" data-act="new">+ createPiggyBank()</button></div>
+  <div class="row" style="gap:40px;align-items:flex-start">
+    <pre class="code s24 a left" style="flex:0 0 760px">function createPiggyBank(owner) {
+  let money = 0;          // у каждой копилки свой
+  return function (coins) {
+    money += coins;
+    return `${owner}: ${money} AZN`;
+  };
+}</pre>
+    <div class="grid g2" data-banks style="gap:20px;flex:1"></div>
+  </div>
+  <p class="a s28 muted">Создайте несколько копилок и бросайте монеты — деньги в одной не попадают в другую.</p>
+  <aside class="notes">Нажимайте «+ createPiggyBank()» — появляется копилка нового владельца (до 4). Кнопки +1, +5, +10 вызывают именно её функцию — видно, что у каждой свой money. Код под каждой копилкой показывает реальный вызов. Это и есть замыкание: money живёт, хотя createPiggyBank давно закончила работу.</aside>
+</section>
+
+<section class="slide dark" data-demo="flip" data-sec="Теория 2" style="gap:44px">
+  <div class="between a"><h2>Квиз: уровень PRO</h2><span class="pill" style="transform:rotate(-3deg)">нажмите на карточку</span></div>
+  <div class="grid g3" style="gap:28px">
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">1</b><code class="q sm">function f() {
+  return arguments.length; }
+f(1, 2, 3)</code></div><div class="b"><b class="ans">3</b><p>Передали три аргумента</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">2</b><code class="q sm">const f = (...a) => a.length;
+f()</code></div><div class="b"><b class="ans">0</b><p>Rest без аргументов — пустой массив</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">3</b><code class="q sm">Math.max(...[4, 9, 2])</code></div><div class="b"><b class="ans">9</b><p>Spread разложил массив</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">4</b><code class="q sm">function r(n) {
+  return n ? n + r(n - 1) : 0; }
+r(4)</code></div><div class="b"><b class="ans">10</b><p>4 + 3 + 2 + 1 + 0</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">5</b><code class="q sm">function mk() {
+  let c = 0; return () => ++c; }
+const a = mk(); a(); a()</code></div><div class="b"><b class="ans">2</b><p>Замыкание помнит c между вызовами</p></div></div></div>
+    <div class="flip a pop"><div class="in"><div class="f"><b class="qn">6</b><code class="q sm">// после вопроса 5:
+const b = mk();
+b()</code></div><div class="b"><b class="ans">1</b><p>У b свой собственный c</p></div></div></div>
+  </div>
+  <aside class="notes">Ответы: 3, 0, 9, 10, 2, 1. Вопрос 4 — рекурсия в одну строку через тернарный оператор; 0 — falsy, это и есть базовый случай.</aside>
+</section>
+
+<section class="slide" data-sec="Теория 2">
+  <div class="split" style="grid-template-columns:680px 1fr;gap:44px;flex:1">
+    <div class="col" style="gap:18px">
+      <h2 class="a" style="font-size:40px;white-space:nowrap">Синтаксис для практики 2</h2>
+      <div class="syn a"><div><code>f(...season)</code><span>spread: разложить массив на аргументы</span></div><div><code>return;</code><span>выйти из функции, ничего не возвращая</span></div><div><code>return a ? b : c;</code><span>выбор прямо в return — рекурсия в 1 строку</span></div><div><code>if (…) x++; else y++;</code><span>одна команда — можно без фигурных скобок</span></div><div><code>return function () {…}</code><span>функция создаёт и отдаёт функцию</span></div></div>
+      <div class="console a" data-con-slot style="flex:1;min-height:120px"></div>
+    </div>
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.3" data-slot>
+<textarea>// 1. spread — массив в аргументы
+console.log(Math.max(...[4, 9, 2]));  // 9
+// 2. return; — просто остановиться
+function stop(n) {
+  if (n === 0) { console.log('стоп!'); return; }
+  console.log('n =', n);
+}
+stop(5); stop(0);
+// 3. ?: в return — короткий выбор
+const sign = (n) =&gt; n &gt;= 0 ? 'плюс' : 'минус';
+console.log(sign(3), sign(-3));
+// 4. if без { } — одна команда
+let home = 0, away = 0;
+const team = 'away';
+if (team === 'home') home++;
+else if (team === 'away') away++;
+console.log(`${home} : ${away}`);
+// 5. функция отдаёт функцию — шаблон замыкания
+function makeCounter() {
+  let count = 0;
+  return function () { count++; return count; };
+}
+const click = makeCounter();
+console.log(click(), click(), click());</textarea>
+    </div>
+  </div>
+  <aside class="notes">Пройдите таблицу сверху вниз и запустите код. Пункт 2 — заготовка для countdown: базовый случай сначала печатает, потом return; останавливает функцию. Пункт 3 — заготовка для lineups. Пункт 5 — шаблон для табло: снаружи функция, внутри переменные, наружу отдаётся функция, которая их меняет. Если кто-то путается, где rest, а где spread: в объявлении — собирает, при вызове — раскладывает.</aside>
+</section>
+
+<!-- ============ ПРАКТИКА 2 ============ -->
+<section class="slide lime" data-sec="Практика 2">
+  <p class="bignum" style="right:120px;bottom:40px;font-size:300px">P2</p>
+  <div class="split" style="grid-template-columns:640px 1fr;gap:64px;flex:1">
+    <div class="col" style="gap:26px">
+      <span class="pill dk a">Практика · 20 минут + 5 разбор</span>
+      <h1 class="a" style="font-size:66px;line-height:1.1;letter-spacing:-1px">Rest, рекурсия, замыкания</h1>
+      <div class="a" data-timer="20" style="display:flex;flex-direction:column;gap:14px">
+        <p class="timer">20:00</p>
+        <div class="bar"><button class="btn dk" data-t="go">▶ Старт</button><button class="btn ghost" data-t="reset">↺</button></div>
+      </div>
+      <div class="a" data-picker style="display:flex;align-items:center;gap:24px">
+        <button class="btn dk">🎲 Кто показывает?</button><span class="picker-num">?</span>
+      </div>
+    </div>
+    <div class="card dk a pop" style="padding:44px;gap:20px;align-self:flex-start">
+      <h3>Требования для всех уровней</h3>
+      <ol class="s28" style="line-height:1.5">
+        <li>Файл practice-2.html + js/practice-2.js с defer</li>
+        <li>У каждой рекурсии — базовый случай с комментарием</li>
+        <li>Rest и spread — там, где число значений заранее неизвестно</li>
+        <li>Функции маленькие, имена — глаголы</li>
+      </ol>
+      <p class="s26 muted">Успели раньше? Напишите oldTotal() через arguments и в комментарии объясните, чем rest удобнее.</p>
+    </div>
+  </div>
+  <aside class="notes">Вторая практика сложнее — помогайте с базовым случаем рекурсии, это главный камень преткновения. Чаще спрашивайте: «когда функция должна остановиться?»</aside>
+</section>
+
+<section class="slide" data-sec="Практика 2" style="gap:30px">
+  <h2 class="a">Практика 2 · Футбольный матч ⚽</h2>
+  <div class="row a" style="align-items:center">
+    <p class="s28">Задача одна на всех: набор функций для футбольной статистики. Сезон команды уже дан:</p>
+    <pre class="code s24" data-static style="flex:0 0 780px;padding:22px 28px">const season = [2, 0, 3, 1];  // голы по матчам</pre>
+  </div>
+  <div class="grid g3 lvls">
+    <div class="lvl a pop"><span class="pill">Базовый · 1–6 баллов</span><ul><li><b>totalGoals(...goals)</b> — сумма голов циклом for</li><li><b>bestMatch(...goals)</b> — через Math.max(...goals)</li><li>Вызов через spread: totalGoals(...season)</li><li>alert: «За сезон: 6 голов, лучший матч: 3»</li></ul></div>
+    <div class="lvl mid a pop"><span class="pill dk">Средний · 7–9 баллов</span><ul><li>Рекурсия <b>countdown(n)</b>: 3… 2… 1… «Матч начался! ⚽»</li><li>Рекурсия <b>lineups(n)</b> = n! — как factorial из теории</li><li>У каждой рекурсии — базовый случай</li></ul></div>
+    <div class="lvl top a pop"><span class="pill">Продвинутый · 10–12 баллов</span><ul><li><b>createScoreboard(home, away)</b> возвращает goal(team)</li><li>goal возвращает счёт: «Нефтчи 1 : 0 Карабах»</li><li>Два табло считают независимо</li></ul></div>
+  </div>
+  <aside class="notes">20 минут: базовый ≈ 8, средний ≈ 6, продвинутый ≈ 6. Весь синтаксис — на слайде «Синтаксис для практики» перед этим. Подсказки. Базовый: цикл как на слайде «Массив за 3 минуты». Средний: countdown(0) — базовый случай, lineups(1) = 1. Продвинутый: внутри createScoreboard две переменные let homeGoals = 0, awayGoals = 0, наружу — function goal(team) {…}, как makeCounter. Нефтчи и Карабах можно заменить любыми командами.</aside>
+</section>
+
+<section class="slide" data-sec="Практика 2">
+  <div class="split" style="grid-template-columns:1fr 440px;gap:48px;flex:1">
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.35" data-slot>
+<textarea>// ── Базовый ──
+function totalGoals(...goals) {
+  let sum = 0;
+  for (let i = 0; i &lt; goals.length; i++) sum += goals[i];
+  return sum;
+}
+function bestMatch(...goals) {
+  return Math.max(...goals);   // spread внутри rest-функции
+}
+const season = [2, 0, 3, 1];
+alert(`За сезон: ${totalGoals(...season)} голов, лучший матч: ${bestMatch(...season)}`);
+
+// ── Средний ──
+function countdown(n) {
+  if (n === 0) { console.log('Матч начался! ⚽'); return; }   // базовый случай
+  console.log(`${n}…`);
+  countdown(n - 1);
+}
+function lineups(n) {
+  return n &lt;= 1 ? 1 : n * lineups(n - 1);    // базовый случай: n &lt;= 1
+}
+countdown(3);
+console.log(`5 игроков можно расставить ${lineups(5)} способами`);</textarea>
+    </div>
+    <div class="col" style="gap:22px">
+      <span class="pill a">Решение · базовый + средний</span>
+      <h2 class="a" style="font-size:52px">Футбольный матч</h2>
+      <ul class="a s26" style="line-height:1.45;display:flex;flex-direction:column;gap:10px"><li>...goals собирает голы в массив</li><li>Math.max(...goals) — лучший матч в одну строку</li><li>Базовые случаи: n === 0 и n &lt;= 1</li><li>5! = 120 способов расставить игроков</li></ul>
+      <div class="console a" data-con-slot style="flex:1;min-height:150px"></div>
+    </div>
+  </div>
+  <p class="sticker" style="left:890px;top:895px;width:330px">Сравни со своим 👀</p>
+  <aside class="notes">Запустите: alert со статистикой, потом обратный отсчёт и 120 в консоли. Спросите: что будет, если убрать строку с базовым случаем в countdown? (переполнение стека, как на слайде с 💥).</aside>
+</section>
+
+<section class="slide" data-sec="Практика 2">
+  <div class="split" style="grid-template-columns:1fr 440px;gap:48px;flex:1">
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.35" data-slot>
+<textarea>// ── Продвинутый ──
+function createScoreboard(home = 'Хозяева', away = 'Гости') {
+  let homeGoals = 0;
+  let awayGoals = 0;
+  return function goal(team) {
+    if (team === home) homeGoals++;
+    else if (team === away) awayGoals++;
+    return `${home} ${homeGoals} : ${awayGoals} ${away}`;
+  };
+}
+
+const derby = createScoreboard('Нефтчи', 'Карабах');
+const friendly = createScoreboard();           // названия по умолчанию
+console.log(derby('Нефтчи'));                   // Нефтчи 1 : 0 Карабах
+console.log(derby('Карабах'));                  // Нефтчи 1 : 1 Карабах
+console.log(friendly('Гости'));                 // свой счёт: Хозяева 0 : 1 Гости
+
+// бонус «Успели раньше?»: arguments вместо rest
+function oldTotal() {
+  let sum = 0;
+  for (let i = 0; i &lt; arguments.length; i++) sum += arguments[i];
+  return sum;
+}
+console.log(oldTotal(1, 2, 3), '— rest удобнее: это настоящий массив');</textarea>
+    </div>
+    <div class="col" style="gap:22px">
+      <span class="pill a">Решение · продвинутый</span>
+      <h2 class="a" style="font-size:52px">Табло PRO 🏟</h2>
+      <ul class="a s26" style="line-height:1.45;display:flex;flex-direction:column;gap:10px"><li>homeGoals и awayGoals спрятаны в замыкании</li><li>derby и friendly — два разных «рюкзака»</li><li>goal меняет счёт снаружи себя — как makeCounter</li><li>Бонус: arguments работает, но rest удобнее</li></ul>
+      <div class="console a" data-con-slot style="flex:1;min-height:150px"></div>
+    </div>
+  </div>
+  <p class="sticker" style="left:890px;top:895px;width:330px">Сравни со своим 👀</p>
+  <aside class="notes">Запустите: счёт дерби меняется, а товарищеский матч считает отдельно. Попробуйте добавить строку console.log(homeGoals) в конце — ReferenceError: переменная видна только внутри замыкания.</aside>
+</section>
+
+<!-- ============ ДОМАШНЕЕ ЗАДАНИЕ ============ -->
+<section class="slide dark" data-sec="Домашнее задание">
+  <div class="split" style="grid-template-columns:640px 1fr;gap:64px;flex:1">
+    <div class="col" style="gap:28px">
+      <span class="pill a">Дедлайн: [дата, время]</span>
+      <h1 class="a" style="font-size:80px;line-height:1.1;letter-spacing:-1px">Домашнее задание</h1>
+      <p class="a muted">Одна задача на всех — «Тамагочи». Делайте столько уровней, сколько успеете: оценка — по уровню, который полностью работает.</p>
+      <ul class="a s28" style="line-height:1.55">
+        <li>homework-2.html + js/homework-2.js</li>
+        <li>Всё — через функции, никакой «простыни» кода</li>
+        <li>Комментарии к главным функциям</li>
+      </ul>
+    </div>
+    <div class="col" style="gap:22px;justify-content:center">
+      <h3 class="a hl">Как оцениваю · 12 баллов</h3>
+      <table class="t a" style="font-size:28px">
+        <thead><tr><th style="width:22%;border-color:var(--lime)">Баллы</th><th style="border-color:var(--lime)">Что сделано</th></tr></thead>
+        <tbody>
+          <tr><td style="border-color:var(--panel-line)">1–3</td><td style="border-color:var(--panel-line)">Код запускается, базовый уровень — частично</td></tr>
+          <tr><td style="border-color:var(--panel-line)">4–6</td><td style="border-color:var(--panel-line)">Базовый уровень полностью</td></tr>
+          <tr><td style="border-color:var(--panel-line)">7–9</td><td style="border-color:var(--panel-line)">+ средний уровень</td></tr>
+          <tr><td style="border-color:var(--panel-line)">10–12</td><td style="border-color:var(--panel-line)">+ продвинутый уровень</td></tr>
+        </tbody>
+      </table>
+      <p class="a s26 muted">−1–2 балла: var, непонятные имена, всё в одной функции. <b style="color:#F1F6E4">Защита:</b> не можешь объяснить свой код — не выше 6.</p>
+    </div>
+  </div>
+  <aside class="notes">Шкала та же. На следующем уроке — разбор «Тамагочи» и защита: 2–3 случайных студента объясняют свой код.</aside>
+</section>
+
+<section class="slide" data-sec="Домашнее задание" style="gap:30px">
+  <h2 class="a">ДЗ · Тамагочи 🐣</h2>
+  <div class="row a" style="align-items:center">
+    <p class="s28">Виртуальный питомец живёт в замыкании. Его нужно кормить и развлекать — иначе он обидится и уйдёт.</p>
+    <pre class="code s24" data-static style="flex:0 0 820px;padding:22px 28px">const barsik = createPet('Барсик');
+barsik('feed'); // 'Барсик: сытость 8, настроение 5'</pre>
+  </div>
+  <div class="grid g3 lvls">
+    <div class="lvl a pop"><span class="pill">Базовый · 1–6 баллов</span><ul><li><b>createPet(name)</b> хранит сытость и настроение (0–10) в замыкании</li><li>Возвращает функцию pet(command)</li><li>Команды через switch: 'feed', 'play', 'status'</li><li>Меню в цикле через prompt, выход по 0</li></ul></div>
+    <div class="lvl mid a pop"><span class="pill dk">Средний · 7–9 баллов</span><ul><li><b>clamp(value, min = 0, max = 10)</b> — значения не выходят за 0–10</li><li>Каждый ход сытость −1; при 0 — «Питомец обиделся и ушёл 😿»</li><li>Эмодзи настроения через ?: — 😺 😐 😿</li></ul></div>
+    <div class="lvl top a pop"><span class="pill">Продвинутый · 10–12 баллов</span><ul><li>Два питомца — два замыкания, выбор, с кем играть</li><li>Команда 'sleep': рекурсивная <b>sleep(hours)</b> печатает «Zzz…» каждый час</li><li>Итог: <b>stats(...values)</b> с rest — сколько ходов прожил каждый</li></ul></div>
+  </div>
+  <aside class="notes">Подсказки (можно дать сильным студентам): внутри createPet — let food = 5, mood = 5; return function (command) { switch (command) { … } return `${name}: …`; }. clamp: Math.min(max, Math.max(min, value)). sleep(hours): if (hours === 0) return; console.log('Zzz…'); sleep(hours - 1).</aside>
+</section>
+
+<section class="slide" data-sec="Домашнее задание">
+  <div class="split" style="grid-template-columns:680px 1fr;gap:44px;flex:1">
+    <div class="col" style="gap:18px">
+      <h2 class="a" style="font-size:40px;white-space:nowrap">Шпаргалка к ДЗ 🐣 · сфотографируйте</h2>
+      <div class="syn a"><div><code>switch + return</code><span>return сразу выходит — break не нужен</span></div><div><code>Math.min(max, Math.max(min, v))</code><span>удержать число в рамках min…max</span></div><div><code>a ? x : b ? y : z</code><span>выбор из трёх вариантов в одну строку</span></div><div><code>prompt(…) ?? '0'</code><span>«Отмена» (null) превращается в выход</span></div><div><code>while (cmd !== '0')</code><span>меню крутится, пока не выбрали выход</span></div></div>
+      <div class="console a" data-con-slot style="flex:1;min-height:120px"></div>
+    </div>
+    <div class="runner a" data-h="756" data-fs="20" data-lh="1.3" data-slot>
+<textarea>// 1. switch + return — break не нужен
+function react(cmd) {
+  switch (cmd) {
+    case 'feed': return 'Ням! 🍗';
+    case 'play': return 'Ура! ⚽';
+    default: return 'Не понимаю 🤔';
+  }
+}
+console.log(react('feed'), react('dance'));
+
+// 2. clamp — число не выходит за рамки
+const clamp = (v, min = 0, max = 10) =&gt;
+  Math.min(max, Math.max(min, v));
+console.log(clamp(12), clamp(-3), clamp(7));   // 10 0 7
+
+// 3. цепочка ?: — один из трёх
+const face = (mood) =&gt; mood &gt;= 7 ? '😺' : mood &gt;= 4 ? '😐' : '😿';
+console.log(face(9), face(5), face(1));
+
+// 4. меню в цикле, «Отмена» = выход
+let cmd = '';
+while (cmd !== '0') {
+  cmd = prompt('feed / play / 0 — выход') ?? '0';
+  if (cmd !== '0') console.log(react(cmd));
+}
+console.log('Пока! 👋');</textarea>
+    </div>
+  </div>
+  <aside class="notes">Эта шпаргалка закрывает весь синтаксис ДЗ, которого нет в теории функций. Запустите и введите feed, play, что-нибудь своё и 0. Пункт 2 читается изнутри наружу: Math.max(min, v) не даёт упасть ниже min, Math.min(max, …) — подняться выше max. Попросите сфотографировать слайд — он понадобится дома.</aside>
+</section>
+
+<section class="slide dark" data-demo="finish" data-sec="Финиш">
+  <div class="blob" style="left:1300px;top:540px;width:520px;height:520px"></div>
+  <div class="split" style="grid-template-columns:1fr 1fr;gap:64px;flex:1">
+    <div class="col" style="gap:30px">
+      <h1 class="a" style="font-size:80px;line-height:1.1;letter-spacing:-1px">Сегодня вы <span class="hl">научились</span></h1>
+      <ul style="line-height:1.6">
+        <li class="a left">объявлять функции трёх видов</li>
+        <li class="a left">передавать параметры и значения по умолчанию</li>
+        <li class="a left">возвращать результат через return</li>
+        <li class="a left">понимать, где «живут» переменные</li>
+        <li class="a left">собирать и раскладывать: rest и spread</li>
+        <li class="a left">думать рекурсивно и прятать данные в замыкания</li>
+      </ul>
+    </div>
+    <div class="col" style="gap:28px;justify-content:center">
+      <div class="card a pop"><h3>Самостоятельно</h3><p class="s28 muted">Cisco JavaScript Essentials 1 (JSE): модуль 5 — функции</p></div>
+      <div class="card lm a pop"><h3>Следующий урок</h3><p class="s28">Модуль 2: объекты, массивы, строки, Date и Math</p></div>
+      <button class="btn a" data-thanks style="align-self:flex-start;font-family:var(--fm);font-size:30px">▶ alert('Спасибо! Вопросы?');</button>
+    </div>
+  </div>
+  <aside class="notes">Салют при открытии слайда. Короткий опрос: что было самым сложным — рекурсия или замыкания? Напомните дедлайн ДЗ «Тамагочи».</aside>
+</section>
+</div><!-- /stage -->
+
+<div class="nav"><button type="button" data-nav="prev" title="Назад">‹</button><button type="button" data-nav="next" title="Вперёд">›</button></div>
+<div id="notes"></div>
+<div id="overview" class="overlay"><h4>Оглавление · нажмите на слайд</h4><div class="list"></div></div>
+<div id="help" class="overlay">
+  <h4>Управление</h4>
+  <table>
+    <tr><td>→ · PageDown · Пробел</td><td>следующий слайд</td></tr>
+    <tr><td>← · PageUp</td><td>предыдущий слайд</td></tr>
+    <tr><td>Home · End</td><td>первый · последний</td></tr>
+    <tr><td>F</td><td>полный экран</td></tr>
+    <tr><td>N</td><td>заметки преподавателя</td></tr>
+    <tr><td>O</td><td>оглавление</td></tr>
+    <tr><td>P</td><td>🚨 тревога: телефон</td></tr>
+    <tr><td>S</td><td>🤫 тишина, болтология</td></tr>
+    <tr><td>M</td><td>🤝 мир, без оскорблений</td></tr>
+    <tr><td>R</td><td>перезапустить таймер перерыва</td></tr>
+    <tr><td>Ctrl + Enter</td><td>запустить код в редакторе</td></tr>
+    <tr><td>Esc</td><td>закрыть окно · выйти из редактора</td></tr>
+    <tr><td>?</td><td>эта подсказка</td></tr>
+  </table>
+</div>
+<div id="hint"><b>← →</b> листать · <b>F</b> полный экран · <b>N</b> заметки · <b>O</b> оглавление · <b>?</b> помощь</div>
+<script>
+(() => {
+  'use strict';
+
+  const stage = document.getElementById('stage');
+  const slides = [...stage.querySelectorAll('.slide')];
+  const total = slides.length;
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  let scale = 1;
+  let cur = -1;
+
+  /* =========================================================
+     Подсветка кода
+     ========================================================= */
+  const KW = 'let|const|var|if|else|switch|case|default|for|while|do|break|continue|function|return|typeof|new|true|false|null|undefined|class|this|in|of|instanceof|try|catch|throw|finally|delete|void|NaN';
+  const TOK = new RegExp(
+    '(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)' +
+    '|(`(?:\\\\[\\s\\S]|[^`\\\\])*`|\'(?:\\\\.|[^\'\\\\\\n])*\'|"(?:\\\\.|[^"\\\\\\n])*")' +
+    '|(<\\/?[A-Za-z!][^<>\\n]*>)' +
+    '|\\b(' + KW + ')\\b' +
+    '|\\b(\\d+(?:\\.\\d+)?n?)\\b', 'g');
+
+  function tokens(src) {
+    const out = [];
+    let last = 0;
+    src.replace(TOK, (m, com, str, tag, kw, num, off) => {
+      if (off > last) out.push(['', src.slice(last, off)]);
+      let cls = com ? 'com' : str ? 'str' : tag ? 'tag' : kw ? 'kw' : 'num';
+      if (cls === 'com' && /Error|✗|забыли|убрали/.test(m)) cls = 'err';
+      out.push([cls, m]);
+      last = off + m.length;
+      return m;
+    });
+    if (last < src.length) out.push(['', src.slice(last)]);
+    return out;
+  }
+  const hl = (src) => tokens(src).map(([c, s]) => (c ? `<span class="tk-${c}">${esc(s)}</span>` : esc(s))).join('');
+  function hlLines(src) {
+    const lines = [];
+    let line = '';
+    for (const [c, s] of tokens(src)) {
+      s.split('\n').forEach((part, i) => {
+        if (i > 0) { lines.push(line); line = ''; }
+        if (part) line += c ? `<span class="tk-${c}">${esc(part)}</span>` : esc(part);
+      });
+    }
+    lines.push(line);
+    return lines.map((l, i) => `<span class="ln" data-l="${i}">${l || ' '}</span>`).join('');
+  }
+  function setCode(pre, lines) {
+    pre.innerHTML = hlLines(Array.isArray(lines) ? lines.join('\n') : lines);
+  }
+  function markLines(pre, on = [], off = []) {
+    $$('.ln', pre).forEach((el, i) => {
+      el.classList.toggle('on', on.includes(i));
+      el.classList.toggle('off', off.includes(i));
+    });
+  }
+
+  /* =========================================================
+     Форматирование значений как в консоли браузера
+     ========================================================= */
+  function fmt(v, top) {
+    const t = typeof v;
+    if (t === 'string') return top ? v : `'${v}'`;
+    if (t === 'bigint') return v + 'n';
+    if (t === 'symbol') return v.toString();
+    if (t === 'function') return `ƒ ${v.name || 'anonymous'}()`;
+    if (v === null) return 'null';
+    if (t === 'undefined') return 'undefined';
+    if (t === 'number') return Object.is(v, -0) ? '-0' : String(v);
+    if (Array.isArray(v)) return '[' + v.map((x) => fmt(x, false)).join(', ') + ']';
+    if (t === 'object') {
+      try { return '{ ' + Object.entries(v).map(([k, x]) => `${k}: ${fmt(x, false)}`).join(', ') + ' }'; }
+      catch (e) { return String(v); }
+    }
+    return String(v);
+  }
+  const evalExpr = (src) => new Function(`'use strict'; return (${src}\n);`)();
+
+  /* =========================================================
+     Защита от бесконечных циклов: в тело каждого цикла
+     вставляется счётчик __g()
+     ========================================================= */
+  function guardLoops(src) {
+    let o = '';
+    let i = 0;
+    const L = src.length;
+    const isId = (c) => /[A-Za-z0-9_$]/.test(c || '');
+    const skipStr = (k) => { const q = src[k]; let j = k + 1; while (j < L && src[j] !== q) { if (src[j] === '\\') j++; j++; } return j; };
+    while (i < L) {
+      const ch = src[i];
+      const nx = src[i + 1];
+      if (ch === '/' && nx === '/') { const j = src.indexOf('\n', i); const e = j < 0 ? L : j; o += src.slice(i, e); i = e; continue; }
+      if (ch === '/' && nx === '*') { const j = src.indexOf('*/', i + 2); const e = j < 0 ? L : j + 2; o += src.slice(i, e); i = e; continue; }
+      if (ch === '"' || ch === "'" || ch === '`') { const j = skipStr(i); o += src.slice(i, j + 1); i = j + 1; continue; }
+      if (isId(ch) && !isId(src[i - 1])) {
+        let j = i;
+        while (j < L && isId(src[j])) j++;
+        const w = src.slice(i, j);
+        if (w === 'for' || w === 'while') {
+          let k = j;
+          while (k < L && /\s/.test(src[k])) k++;
+          if (src[k] === '(') {
+            let d = 0;
+            let m = k;
+            for (; m < L; m++) {
+              const c = src[m];
+              if (c === '"' || c === "'" || c === '`') { m = skipStr(m); continue; }
+              if (c === '(') d++;
+              else if (c === ')') { d--; if (d === 0) break; }
+            }
+            let p = m + 1;
+            while (p < L && /\s/.test(src[p])) p++;
+            if (src[p] === '{') { o += src.slice(i, p + 1) + '__g();'; i = p + 1; continue; }
+            o += src.slice(i, m + 1); i = m + 1; continue;
+          }
+        }
+        if (w === 'do') {
+          let k = j;
+          while (k < L && /\s/.test(src[k])) k++;
+          if (src[k] === '{') { o += src.slice(i, k + 1) + '__g();'; i = k + 1; continue; }
+        }
+        o += w; i = j; continue;
+      }
+      o += ch; i++;
+    }
+    return o;
+  }
+
+  function makePrinter(con) {
+    return (cls) => (...args) => {
+      const d = document.createElement('div');
+      d.className = 'line ' + cls;
+      d.textContent = args.map((v) => fmt(v, true)).join(' ');
+      con.appendChild(d);
+      con.scrollTop = con.scrollHeight;
+    };
+  }
+
+  function execute(code, con) {
+    con.innerHTML = '';
+    const print = makePrinter(con);
+    const fake = { log: print(''), info: print(''), warn: print('warn'), error: print('err'), table: print('') };
+    let n = 0;
+    const g = () => { if (++n > 100000) throw new Error('__LOOP__'); };
+    try {
+      new Function('console', '__g', guardLoops(code))(fake, g);
+      if (!con.children.length) print('sys')('✓ Код выполнен (в консоль ничего не выведено)');
+    } catch (e) {
+      if (e && e.message === '__LOOP__') print('err')('⛔ Бесконечный цикл! Остановлено после 100 000 итераций — настоящая вкладка бы зависла');
+      else print('err')(`${e && e.name ? e.name : 'Error'}: ${e && e.message ? e.message : e}`);
+    }
+  }
+
+  /* =========================================================
+     Редактор кода с запуском
+     ========================================================= */
+  function initRunner(box) {
+    const ta = $('textarea', box);
+    const original = ta.value.replace(/^\n/, '');
+    ta.value = original;
+    ta.spellcheck = false;
+    const editor = document.createElement('div');
+    editor.className = 'editor';
+    editor.style.height = (box.dataset.h || 300) + 'px';
+    const pre = document.createElement('pre');
+    ta.replaceWith(editor);
+    editor.append(pre, ta);
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.innerHTML = '<button class="btn" type="button" data-run>▶ Запустить</button><button class="btn ghost sm" type="button" data-reset>↺ Сброс</button><span class="hint">Ctrl + Enter · код можно менять</span>';
+    if (box.dataset.fs) {
+      [pre, ta].forEach((el) => { el.style.fontSize = box.dataset.fs + 'px'; el.style.lineHeight = box.dataset.lh || '1.45'; });
+    }
+    // консоль либо под редактором, либо в отдельном месте слайда ([data-con-slot])
+    const slot = box.hasAttribute('data-slot') && box.closest('.slide').querySelector('[data-con-slot]');
+    const con = slot || document.createElement('div');
+    box.append(bar);
+    if (!slot) {
+      con.className = 'console';
+      con.style.height = (box.dataset.conH || 110) + 'px';
+      box.append(con);
+    }
+    const sync = () => { pre.innerHTML = hl(ta.value) + '\n'; pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; };
+    ta.addEventListener('input', sync);
+    ta.addEventListener('scroll', () => { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; });
+    ta.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = ta.selectionStart;
+        ta.setRangeText('  ', s, ta.selectionEnd, 'end');
+        sync();
+      } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        run();
+      } else if (e.key === 'Escape') {
+        ta.blur();
+      }
+      e.stopPropagation();
+    });
+    const run = () => { execute(ta.value, con); con.classList.remove('flash'); void con.offsetWidth; con.classList.add('flash'); };
+    $('[data-run]', bar).addEventListener('click', run);
+    $('[data-reset]', bar).addEventListener('click', () => { ta.value = original; sync(); con.innerHTML = ''; });
+    sync();
+    box._console = con;
+  }
+
+  /* =========================================================
+     Живые выражения (typeof-машина, приоритеты)
+     ========================================================= */
+  function showValue(out, badge, src) {
+    try {
+      const v = evalExpr(src);
+      const t = typeof v;
+      out.textContent = fmt(v, false);
+      out.className = t === 'string' ? 'v-str' : t === 'number' || t === 'bigint' ? 'v-num' : '';
+      badge.textContent = 'typeof → ' + t;
+      badge.className = 'badge t-' + t;
+    } catch (e) {
+      out.textContent = e.name;
+      out.className = 'v-err';
+      badge.textContent = 'ошибка';
+      badge.className = 'badge no';
+    }
+    out.classList.add('flash');
+    setTimeout(() => out.classList.remove('flash'), 500);
+  }
+  function initExpr(box) {
+    const inp = $('input', box);
+    const out = $('output', box);
+    const badge = $('.badge', box);
+    inp.value = box.dataset.init || '';
+    const go = () => showValue(out, badge, inp.value);
+    inp.addEventListener('input', go);
+    $$('.chip', box).forEach((ch) => ch.addEventListener('click', () => { inp.value = ch.textContent; go(); }));
+    box._set = (v) => { inp.value = v; go(); };
+    go();
+  }
+
+  /* =========================================================
+     Салют
+     ========================================================= */
+  const fx = document.getElementById('fx');
+  const ctx = fx.getContext('2d');
+  let parts = [];
+  let raf = 0;
+  function confetti(x = 960, y = 540, n = 160) {
+    const colors = ['#C5F82A', '#F1F6E4', '#FFC07A', '#8FD3FF', '#4F7A00', '#FF8A7A'];
+    for (let k = 0; k < n; k++) {
+      const a = Math.random() * Math.PI * 2;
+      const v = 6 + Math.random() * 16;
+      parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 9, s: 10 + Math.random() * 12, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: colors[k % colors.length], life: 110 + Math.random() * 70 });
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    ctx.clearRect(0, 0, 1920, 1080);
+    parts = parts.filter((p) => p.life-- > 0 && p.y < 1200);
+    for (const p of parts) {
+      p.vx *= 0.99; p.vy += 0.42; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.r);
+      ctx.globalAlpha = Math.min(1, p.life / 40);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      ctx.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(tick) : 0;
+    if (!raf) ctx.clearRect(0, 0, 1920, 1080);
+  }
+  function stagePoint(e) {
+    const r = stage.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
+  }
+
+  /* =========================================================
+     Таймеры, «кто показывает», увеличение вариантов, квиз
+     ========================================================= */
+  const mmss = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+  function makeTimer(minutes, onTick, onDone) {
+    const t = { total: minutes * 60, left: minutes * 60, id: 0 };
+    t.start = () => { if (t.id || t.left <= 0) return; t.id = setInterval(() => { t.left--; onTick(t); if (t.left <= 0) { t.stop(); onDone(t); } }, 1000); onTick(t); };
+    t.stop = () => { clearInterval(t.id); t.id = 0; onTick(t); };
+    t.reset = () => { t.stop(); t.left = t.total; onTick(t); };
+    return t;
+  }
+  $$('[data-timer]').forEach((box) => {
+    const disp = $('.timer', box);
+    const go = $('[data-t="go"]', box);
+    const t = makeTimer(+box.dataset.timer,
+      (tt) => { disp.textContent = mmss(tt.left); disp.classList.toggle('done', tt.left <= 0); go.textContent = tt.id ? '❚❚ Пауза' : '▶ Старт'; },
+      () => confetti(960, 400, 200));
+    go.addEventListener('click', () => (t.id ? t.stop() : t.start()));
+    $('[data-t="reset"]', box).addEventListener('click', t.reset);
+  });
+
+  const picked = new Set();
+  $$('[data-picker]').forEach((box) => {
+    const btn = $('button', box);
+    const num = $('.picker-num', box);
+    btn.addEventListener('click', async () => {
+      if (picked.size >= 19) picked.clear();
+      const pool = [];
+      for (let k = 1; k <= 19; k++) if (!picked.has(k)) pool.push(k);
+      const final = pool[Math.floor(Math.random() * pool.length)];
+      btn.disabled = true;
+      for (let k = 0; k < 18; k++) {
+        num.textContent = 1 + Math.floor(Math.random() * 19);
+        await sleep(40 + k * 9);
+      }
+      num.textContent = final;
+      picked.add(final);
+      num.classList.remove('flash'); void num.offsetWidth; num.classList.add('flash');
+      const p = stagePoint({ clientX: num.getBoundingClientRect().left + num.offsetWidth * scale / 2, clientY: num.getBoundingClientRect().top + 40 * scale });
+      confetti(p.x, p.y, 80);
+      btn.disabled = false;
+    });
+  });
+
+  /* =========================================================
+     Тревоги для дисциплины: P — телефон, S — тишина, M — мир
+     ========================================================= */
+  const alarm = document.getElementById('alarm');
+  let audio = null;
+  let alarmHide = 0;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const ALARMS = {
+    phone: { emo: '📵', title: 'ТЕЛЕФОН ОБНАРУЖЕН!', ms: 3000, subs: ['Телефон — в рюкзак, или анекдот про JavaScript 🎤', 'Сканирование… найден TikTok на задней парте 👀', 'console.log грустит, когда на него не смотрят 😢', 'Уведомления подождут. Баги — нет 🐞'] },
+    shh: { emo: '🤫', title: 'Тссс…', ms: 2400, subs: ['Болтология.exe остановлена', 'Громкость класса: 0%', 'Сейчас говорит только console.log', 'Хочешь поговорить? Тема следующего слайда — твоя 🎤'] },
+    love: { emo: '🤝', title: 'Мир, дружба, JavaScript', ms: 2600, subs: ['Ругаем баги, а не людей ❤️', 'Даже null и undefined как-то уживаются', 'Ошибся? Отлично — значит, учишься'] },
+  };
+  function tone(kind) {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = audio.currentTime;
+      const out = audio.createGain();
+      out.connect(audio.destination);
+      if (kind === 'phone') {
+        const o = audio.createOscillator();
+        o.type = 'square';
+        for (let k = 0; k < 8; k++) o.frequency.setValueAtTime(k % 2 ? 620 : 920, t0 + k * 0.22);
+        out.gain.setValueAtTime(0.05, t0);
+        out.gain.linearRampToValueAtTime(0, t0 + 1.8);
+        o.connect(out); o.start(t0); o.stop(t0 + 1.8);
+      } else if (kind === 'shh') {
+        const len = audio.sampleRate * 1.2;
+        const buf = audio.createBuffer(1, len, audio.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let k = 0; k < len; k++) d[k] = Math.random() * 2 - 1;
+        const src = audio.createBufferSource();
+        src.buffer = buf;
+        const f = audio.createBiquadFilter();
+        f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.8;
+        out.gain.setValueAtTime(0, t0);
+        out.gain.linearRampToValueAtTime(0.35, t0 + 0.15);
+        out.gain.linearRampToValueAtTime(0, t0 + 1.2);
+        src.connect(f); f.connect(out); src.start(t0);
+      } else {
+        [523, 659, 784, 1047].forEach((hz, k) => {
+          const o = audio.createOscillator();
+          const g = audio.createGain();
+          o.type = 'sine'; o.frequency.value = hz;
+          g.gain.setValueAtTime(0, t0 + k * 0.12);
+          g.gain.linearRampToValueAtTime(0.12, t0 + k * 0.12 + 0.02);
+          g.gain.linearRampToValueAtTime(0, t0 + k * 0.12 + 0.5);
+          o.connect(g); g.connect(audio.destination); o.start(t0 + k * 0.12); o.stop(t0 + k * 0.12 + 0.55);
+        });
+      }
+    } catch (e) { /* звук не обязателен */ }
+  }
+  function raise(kind) {
+    const a = ALARMS[kind];
+    alarm.className = 'on ' + kind;
+    $('.al-emo', alarm).textContent = a.emo;
+    $('.al-title', alarm).textContent = a.title;
+    $('.al-sub', alarm).textContent = pick(a.subs);
+    tone(kind);
+    if (kind === 'phone') stage.animate([{ transform: stage.style.transform }, { transform: stage.style.transform + ' translateX(-14px) rotate(-.6deg)' }, { transform: stage.style.transform + ' translateX(14px) rotate(.6deg)' }, { transform: stage.style.transform }], { duration: 260, iterations: 4 });
+    if (kind === 'love') { confetti(600, 500, 120); setTimeout(() => confetti(1320, 500, 120), 250); }
+    clearTimeout(alarmHide);
+    alarmHide = setTimeout(() => { alarm.className = ''; }, a.ms);
+  }
+  alarm.addEventListener('click', () => { clearTimeout(alarmHide); alarm.className = ''; });
+
+  const zoom = document.getElementById('zoom');
+  stage.addEventListener('click', (e) => {
+    const al = e.target.closest('[data-alarm]');
+    if (al) { raise(al.dataset.alarm); return; }
+    const card = e.target.closest('.var');
+    if (card && !card.classList.contains('tip') && !zoom.contains(card)) {
+      zoom.innerHTML = '';
+      zoom.appendChild(card.cloneNode(true)).classList.remove('a');
+      zoom.classList.add('on');
+    }
+    const flip = e.target.closest('.flip');
+    if (flip) flip.classList.toggle('open');
+  });
+  zoom.addEventListener('click', () => zoom.classList.remove('on'));
+
+  /* =========================================================
+     Демо по слайдам
+     ========================================================= */
+  const demos = {};
+  const timers = new Set();
+  const every = (fn, ms) => { const id = setInterval(fn, ms); timers.add(id); return id; };
+  const stopAll = () => { timers.forEach(clearInterval); timers.clear(); };
+
+  demos.cover = (s) => {
+    const badge = $('#jsBadge', s);
+    const typer = $('#typer', s);
+    let typing = 0;
+    s.addEventListener('mousemove', (e) => {
+      const p = stagePoint(e);
+      const dx = p.x - 1550;
+      const dy = p.y - 380;
+      badge.style.transform = `perspective(900px) rotateY(${dx / 40}deg) rotateX(${-dy / 40}deg) rotate(6deg)`;
+    });
+    badge.addEventListener('click', () => {
+      confetti(1550, 380, 220);
+      badge.animate([{ scale: 1 }, { scale: 1.18 }, { scale: 1 }], { duration: 500, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    });
+    return {
+      enter() {
+        const text = typer.dataset.text || "console.log('Привет!')";
+        const id = ++typing;
+        typer.textContent = '';
+        (async () => {
+          await sleep(900);
+          for (const ch of text) { if (id !== typing) return; typer.textContent += ch; await sleep(70); }
+        })();
+      },
+      leave() { typing++; },
+    };
+  };
+
+  demos.count = (s) => ({
+    enter() {
+      $$('[data-count]', s).forEach((el) => {
+        const to = +el.dataset.count;
+        const pre = el.dataset.prefix || '';
+        const t0 = performance.now();
+        const step = (t) => {
+          const k = Math.min(1, (t - t0) / 1100);
+          el.textContent = pre + Math.round(to * (1 - Math.pow(1 - k, 3)));
+          if (k < 1 && cur === slides.indexOf(s)) requestAnimationFrame(step);
+          else el.textContent = pre + to;
+        };
+        requestAnimationFrame(step);
+      });
+    },
+  });
+
+  demos.client = (s) => {
+    const mini = $('#mini', s);
+    const btn = $('.mbtn', mini);
+    const cnt = $('.mcount', mini);
+    const live = $('.mlive span', mini);
+    let orders = 0;
+    $$('.layer[data-layer]', s).forEach((l) => l.addEventListener('click', () => {
+      l.classList.toggle('on');
+      $('.tog', l).classList.toggle('on');
+      mini.classList.toggle(l.dataset.layer, l.classList.contains('on'));
+    }));
+    btn.addEventListener('click', () => {
+      if (!mini.classList.contains('js')) {
+        mini.classList.remove('shake'); void mini.offsetWidth; mini.classList.add('shake');
+        cnt.innerHTML = 'Нажали… а ничего не происходит 🤷 (нет JS)';
+        return;
+      }
+      orders++;
+      cnt.innerHTML = `Заказов: <b>${orders}</b> ${orders >= 5 ? '— вы наш лучший клиент! 🏆' : ''}`;
+      btn.textContent = 'Ещё чашку!';
+      const f = document.createElement('span');
+      f.className = 'flyer';
+      f.textContent = ['☕', '🥐', '🧁', '🍪'][orders % 4];
+      f.style.left = (btn.offsetLeft + 40 + Math.random() * 160) + 'px';
+      f.style.top = (btn.offsetTop - 10) + 'px';
+      mini.appendChild(f);
+      setTimeout(() => f.remove(), 1300);
+      if (orders % 5 === 0) confetti(1300, 600, 120);
+    });
+    const clock = () => { live.textContent = new Date().toLocaleTimeString('ru-RU'); };
+    return { enter() { clock(); every(clock, 1000); } };
+  };
+
+  const startedAt = Date.now();
+  demos.whatjs = (s) => {
+    const ua = navigator.userAgent;
+    let eng = 'V8 (Chromium)';
+    if (/Firefox\//.test(ua)) eng = 'Firefox → SpiderMonkey';
+    else if (/Edg\//.test(ua)) eng = 'Edge → V8';
+    else if (/Chrome\//.test(ua)) eng = 'Chrome → V8';
+    else if (/Safari\//.test(ua)) eng = 'Safari → JavaScriptCore';
+    $('[data-engine]', s).textContent = eng;
+    const up = $('[data-uptime]', s);
+    const upd = () => {
+      const sec = Math.floor((Date.now() - startedAt) / 1000);
+      up.textContent = sec < 60 ? `${sec} с` : `${Math.floor(sec / 60)} мин ${sec % 60} с`;
+    };
+    return { enter() { upd(); every(upd, 1000); } };
+  };
+
+  demos.dombom = (s) => {
+    const set = (k, v) => { const el = $(`[data-bom="${k}"]`, s); if (el.textContent !== String(v)) { el.textContent = v; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } };
+    const upd = () => {
+      set('iw', innerWidth); set('ih', innerHeight);
+      set('sc', `${screen.width} × ${screen.height}`);
+      set('lang', navigator.language); set('proto', location.protocol); set('online', navigator.onLine);
+    };
+    addEventListener('resize', upd);
+    const q = $('[data-q]', s);
+    const API = { document: 'document', html: 'document.documentElement', head: 'document.head', title: "document.title  // 'Урок 1'", body: 'document.body', h1: "document.querySelector('h1')", p: "document.querySelector('p')" };
+    $$('.tnode', s).forEach((b) => b.addEventListener('click', () => {
+      const n = b.dataset.n;
+      $$('.tnode', s).forEach((x) => x.classList.toggle('sel', x === b));
+      $$('.mock [data-n], .mock[data-n]', s).forEach((x) => x.classList.toggle('sel', x.dataset.n === n));
+      q.textContent = API[n];
+    }));
+    return { enter: upd };
+  };
+
+  demos.embed = (s) => {
+    const pre = $('[data-code]', s);
+    const text = $('[data-step-text]', s);
+    const con = $('[data-con]', s);
+    const btn = $('[data-act="step"]', s);
+    pre.innerHTML = hlLines(pre.textContent);
+    const steps = [
+      { l: [0, 1, 2, 3, 4], t: 'Браузер читает HTML сверху вниз: head, meta, title' },
+      { l: [5], t: 'Встретил <script defer>: app.js скачивается параллельно, но пока НЕ запускается' },
+      { l: [6, 7, 8], t: 'Строится body — на экране появляется заголовок' },
+      { l: [9, 10, 11], t: 'Встроенный <script> выполняется сразу', log: 'Я внутри страницы' },
+      { l: [12, 13], t: 'HTML прочитан до конца — страница готова' },
+      { l: [5], t: 'Только теперь запускается js/app.js — все элементы уже на месте ✓', log: 'app.js: нашёл <h1> → «Привет, JS!»' },
+    ];
+    let k = 0;
+    const reset = () => { k = 0; markLines(pre); con.innerHTML = ''; text.textContent = 'Нажмите «Шаг», чтобы увидеть, как браузер читает страницу'; btn.textContent = 'Шаг ▶'; };
+    btn.addEventListener('click', () => {
+      if (k >= steps.length) { reset(); return; }
+      const st = steps[k];
+      const all = Array.from({ length: 14 }, (_, i) => i);
+      markLines(pre, st.l, all.filter((i) => !st.l.includes(i)));
+      text.textContent = `Шаг ${k + 1}/${steps.length} · ${st.t}`;
+      text.parentElement.classList.remove('flash'); void text.offsetWidth; text.parentElement.classList.add('flash');
+      if (st.log) makePrinter(con)(k === 5 ? 'sys' : '')(st.log);
+      k++;
+      btn.textContent = k >= steps.length ? 'Сначала ↺' : 'Шаг ▶';
+    });
+    $('[data-act="reset"]', s).addEventListener('click', reset);
+    return { enter: reset };
+  };
+
+  demos.noscript = (s) => {
+    const tog = $('[data-js-toggle]', s);
+    const frame = $('[data-frame]', s);
+    const render = () => {
+      const on = tog.classList.contains('on');
+      tog.lastChild.textContent = on ? 'JavaScript включён' : 'JavaScript выключен';
+      frame.className = on ? 'mini css' : 'mini';
+      frame.innerHTML = on
+        ? '<p style="font-family:var(--fd);font-weight:800;font-size:30px">☕ kofe.az</p><p style="font-size:24px">Сайт работает, кнопки живые</p>'
+        : '<p style="font-size:26px;background:#FFF1A8;padding:8px 14px">Включите JavaScript, чтобы сайт заработал!</p>';
+    };
+    tog.addEventListener('click', () => { tog.classList.toggle('on'); render(); });
+    const sb = $('[data-surprise]', s);
+    sb.addEventListener('click', () => {
+      console.log('%cПривет, студент! 👋 Это настоящая консоль браузера.', 'font: 800 28px Manrope, sans-serif; color: #12160C; background: #C5F82A; padding: 10px 18px; border-radius: 10px;');
+      console.log('%cНапишите здесь: 2 + 2 и нажмите Enter', 'font: 16px monospace; color: #4F7A00;');
+      sb.textContent = 'Готово! Теперь F12 → Console';
+    });
+    render();
+  };
+
+  demos.keywords = (s) => {
+    const toast = $('[data-toast]', s);
+    let hide = 0;
+    const tryKw = (w) => {
+      try { new Function(`'use strict'; let ${w} = 1;`); return `let ${w} = 1 → сработало?! В обычном скрипте можно, в модулях — нет. Не используйте!`; }
+      catch (e) { return `let ${esc(w)} = 1 → <b>${e.name}</b>: ${esc(e.message)}`; }
+    };
+    const build = (box, res) => {
+      box.innerHTML = '';
+      box.dataset[res ? 'kwsRes' : 'kws'].split(' ').forEach((w) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'kw' + (res ? ' res' : '');
+        b.textContent = w;
+        b.addEventListener('click', () => {
+          toast.innerHTML = tryKw(w);
+          toast.classList.add('on');
+          b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+          clearTimeout(hide);
+          hide = setTimeout(() => toast.classList.remove('on'), 4000);
+        });
+        box.appendChild(b);
+      });
+    };
+    build($('[data-kws]', s), false);
+    build($('[data-kws-res]', s), true);
+    return { leave() { toast.classList.remove('on'); } };
+  };
+
+  demos.naming = (s) => {
+    const inp = $('[data-name-inp]', s);
+    const out = $('[data-name-out]', s);
+    const check = (n) => {
+      if (!n) return ['no', 'Введите имя'];
+      if (/\s/.test(n)) return ['no', '✗ Пробелы запрещены'];
+      if (/^\d/.test(n)) return ['no', '✗ Нельзя начинать с цифры'];
+      if (n.includes('-')) return ['no', '✗ Дефис — это минус: user - name'];
+      if (!/^[\p{L}\p{N}_$]+$/u.test(n)) return ['no', '✗ Недопустимый символ'];
+      try { new Function(`'use strict'; let ${n};`); } catch (e) { return ['no', '✗ Зарезервированное слово']; }
+      if (/[^\x00-\x7F]/.test(n)) return ['warn', '⚠ Можно, но на курсе пишем латиницей'];
+      if (/^[A-Z][A-Z0-9_]*$/.test(n)) return ['ok', '✓ Можно · стиль констант-настроек'];
+      if (/^[a-z_$][a-zA-Z0-9$]*$/.test(n) && /[A-Z]/.test(n)) return ['ok', '✓ Можно · camelCase 👍'];
+      return ['ok', '✓ Можно'];
+    };
+    const go = () => {
+      const [k, msg] = check(inp.value.trim());
+      out.innerHTML = `<span class="badge ${k === 'no' ? 'no' : ''}" style="font-size:28px;padding:8px 20px;${k === 'warn' ? 'background:#FFF1A8' : ''}">${esc(msg)}</span>`;
+    };
+    inp.addEventListener('input', go);
+    go();
+  };
+
+  demos.types = (s) => {
+    const box = $('.expr', s);
+    $$('[data-try]', s).forEach((c) => {
+      c.style.cursor = 'pointer';
+      c.addEventListener('click', () => {
+        box._set(c.dataset.try);
+        c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+      });
+    });
+  };
+
+  demos.calc = (s) => {
+    const a = $('[data-ca]', s);
+    const b = $('[data-cb]', s);
+    const ta = $('[data-cat]', s);
+    const tb = $('[data-cbt]', s);
+    const res = $('[data-cres]', s);
+    const val = (inp, tog) => (tog.classList.contains('on') ? inp.value : Number(inp.value));
+    const show = (v) => {
+      if (typeof v === 'string') return `<span style="color:var(--str)">'${esc(v)}'</span>`;
+      if (Number.isNaN(v)) return '<span style="color:var(--err)">NaN</span>';
+      return `<span style="color:var(--num)">${esc(fmt(v, false))}</span>`;
+    };
+    const go = () => {
+      const x = val(a, ta);
+      const y = val(b, tb);
+      const ops = [['+', x + y], ['-', x - y], ['*', x * y], ['/', x / y], ['%', x % y], ['**', x ** y]];
+      res.innerHTML = ops.map(([o, v]) => `<div>a ${o} b → ${show(v)}</div>`).join('');
+    };
+    [a, b].forEach((el) => el.addEventListener('input', go));
+    [ta, tb].forEach((el) => el.addEventListener('click', () => { el.classList.toggle('on'); go(); res.classList.remove('flash'); void res.offsetWidth; res.classList.add('flash'); }));
+    go();
+  };
+
+  demos.cmp = (s) => {
+    const l = $('[data-l]', s);
+    const r = $('[data-r]', s);
+    const out = $('[data-cmp-out]', s);
+    const go = () => {
+      let x, y;
+      try { x = evalExpr(l.value); y = evalExpr(r.value); } catch (e) { out.innerHTML = `<p class="v-err">${e.name}: ${esc(e.message)}</p>`; return; }
+      const row = (op, v) => `<div class="expr-row"><span class="mono s28" style="flex:1">${esc(l.value)} ${op} ${esc(r.value)}</span><span class="badge ${v ? '' : 'no'}" style="font-size:28px">${v}</span></div>`;
+      out.innerHTML = row('==', x == y) + row('===', x === y) + `<p class="s24 muted">типы: ${typeof x} и ${typeof y}</p>`; // eslint-disable-line eqeqeq
+    };
+    [l, r].forEach((el) => el.addEventListener('input', go));
+    $$('[data-pair]', s).forEach((c) => c.addEventListener('click', () => {
+      [l.value, r.value] = c.dataset.pair.split('|');
+      go();
+      out.classList.remove('flash'); void out.offsetWidth; out.classList.add('flash');
+    }));
+    go();
+  };
+
+  demos.io = (s) => {
+    const runner = $('.runner', s);
+    const con = () => runner._console;
+    $$('[data-io]', s).forEach((b) => b.addEventListener('click', () => {
+      const print = makePrinter(con());
+      const k = b.dataset.io;
+      if (k === 'alert') { const r = alert('Привет из JavaScript! 👋'); print('')(`alert(…) вернул ${fmt(r, false)}`); }
+      if (k === 'prompt') { const v = prompt('Сколько вам лет?', '18'); print(v === null ? 'warn' : '')(`prompt(…) вернул ${fmt(v, false)} — тип ${typeof v}`); }
+      if (k === 'confirm') { const v = confirm('Вам нравится JavaScript?'); print('')(`confirm(…) вернул ${v} — тип ${typeof v}`); }
+      if (k === 'log') print('sys')('console.log пишет сюда — в консоль, а не на страницу');
+    }));
+  };
+
+  demos.flip = (s) => ({ leave() { $$('.flip', s).forEach((f) => f.classList.remove('open')); } });
+
+  demos.pause = (s) => {
+    const disp = $('[data-pause-time]', s);
+    const ring = $('[data-ring]', s);
+    const C = 2 * Math.PI * 190;
+    const t = makeTimer(10,
+      (tt) => { disp.textContent = tt.left > 0 ? mmss(tt.left) : 'Пора!'; ring.style.strokeDashoffset = String(C * (1 - tt.left / tt.total)); },
+      () => { confetti(960, 400, 260); });
+    s._restart = () => { t.reset(); t.start(); };
+    return { enter() { if (!t.id && t.left === t.total) t.start(); } };
+  };
+
+  demos.ifelse = (s) => {
+    const pre = $('[data-code]', s);
+    const range = $('[data-age]', s);
+    const v = $('[data-age-v]', s);
+    const out = $('[data-if-out]', s);
+    const go = () => {
+      const age = +range.value;
+      v.textContent = age;
+      setCode(pre, [`const age = ${age};`, '', 'if (age >= 18) {', "  alert('Добро пожаловать!');", '} else {', "  alert('Приходите позже');", '}', '', 'if (age >= 7 && age <= 17) {', "  console.log('Школьник');", '}']);
+      const adult = age >= 18;
+      const school = age >= 7 && age <= 17;
+      markLines(pre, [0, 2, adult ? 3 : 4, adult ? -1 : 5, 8, school ? 9 : -1], [adult ? 5 : 3, adult ? 4 : -1, school ? -1 : 9]);
+      out.innerHTML = `<span class="bubble">💬 alert: ${adult ? 'Добро пожаловать!' : 'Приходите позже'}</span>` + (school ? '<span class="bubble">🖥 console: Школьник</span>' : '');
+    };
+    range.addEventListener('input', go);
+    go();
+  };
+
+  demos.truthy = (s) => {
+    const pre = $('[data-code]', s);
+    const range = $('[data-temp]', s);
+    const v = $('[data-t-v]', s);
+    const go = () => {
+      const t = +range.value;
+      v.textContent = t;
+      setCode(pre, [`const t = ${t};`, '', 'if (t < 0) {', "  alert('Мороз 🥶');", '} else if (t < 15) {', "  alert('Прохладно');", '} else if (t < 25) {', "  alert('Тепло');", '} else {', "  alert('Жара 🥵');", '}']);
+      const b = t < 0 ? 0 : t < 15 ? 1 : t < 25 ? 2 : 3;
+      const conds = [2, 4, 6, 8].slice(0, b + 1);
+      const bodies = [3, 5, 7, 9];
+      markLines(pre, [0, ...conds, bodies[b]], bodies.filter((_, i) => i !== b));
+    };
+    range.addEventListener('input', go);
+    go();
+    const bubble = $('[data-truthy-out]', s);
+    $$('[data-vals]', s).forEach((box) => {
+      box.dataset.vals.split('|').forEach((src) => {
+        const c = document.createElement('button');
+        c.type = 'button';
+        c.className = 'chip';
+        c.textContent = src;
+        c.addEventListener('click', () => {
+          const val = evalExpr(src);
+          bubble.innerHTML = `if (<b class="mono">${esc(src)}</b>) → ${val ? '<span class="badge">выполнится ✓</span>' : '<span class="badge no">не выполнится ✗</span>'} <span class="s24 muted">Boolean(${esc(src)}) = ${Boolean(val)}</span>`;
+          bubble.classList.remove('flash'); void bubble.offsetWidth; bubble.classList.add('flash');
+        });
+        box.appendChild(c);
+      });
+    });
+  };
+
+  demos.ternary = (s) => {
+    const range = $('[data-score]', s);
+    const v = $('[data-sc-v]', s);
+    const q = $('[data-tq]', s);
+    const c = $('[data-tc]', s);
+    const out = $('[data-sc-out]', s);
+    const on = 'background:#12160C;color:#C5F82A;border-radius:8px;padding:2px 8px;font-weight:800';
+    const off = 'opacity:.35';
+    const go = () => {
+      const sc = +range.value;
+      v.textContent = sc;
+      const pass = sc >= 51;
+      q.style.cssText = pass ? on : off;
+      c.style.cssText = pass ? off : on;
+      out.textContent = `// status = '${pass ? 'сдал' : 'не сдал'}' ${pass ? '🎉' : '📚'}`;
+    };
+    range.addEventListener('input', go);
+    go();
+  };
+
+  demos.switch = (s) => {
+    const pre = $('[data-code]', s);
+    const brk = $('[data-brk]', s);
+    const con = $('[data-con]', s);
+    const days = $('[data-days]', s);
+    const names = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    let day = 1;
+    const lines = (d, b) => [`const day = ${d};`, '', 'switch (day) {', '  case 1:', "    alert('Понедельник 😴');", b ? '    break;' : '    // break;  ← убрали', '  case 6:', '  case 7:', "    alert('Выходной 🎉');", b ? '    break;' : '    // break;  ← убрали', '  default:', "    alert('Рабочий день');", '}'];
+    const msgs = { 4: 'Понедельник 😴', 8: 'Выходной 🎉', 11: 'Рабочий день' };
+    const run = () => {
+      const b = brk.classList.contains('on');
+      brk.lastChild.textContent = b ? 'break на месте' : 'break убран!';
+      setCode(pre, lines(day, b));
+      const entry = day === 1 ? 3 : day === 6 ? 6 : day === 7 ? 7 : 10;
+      const ex = [0, 2];
+      con.innerHTML = '';
+      const print = makePrinter(con);
+      for (let i = entry; i <= 11; i++) {
+        ex.push(i);
+        if (msgs[i]) print('')(`alert: ${msgs[i]}`);
+        if ((i === 5 || i === 9) && b) break;
+      }
+      ex.push(12);
+      const all = Array.from({ length: 13 }, (_, i) => i);
+      markLines(pre, ex, all.filter((i) => !ex.includes(i) && i !== 1));
+      $$('.chip', days).forEach((c, i) => { c.style.background = i + 1 === day ? 'var(--lime)' : ''; });
+    };
+    names.forEach((n, i) => {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'chip';
+      c.textContent = `${i + 1} ${n}`;
+      c.addEventListener('click', () => { day = i + 1; run(); });
+      days.appendChild(c);
+    });
+    brk.addEventListener('click', () => { brk.classList.toggle('on'); run(); });
+    run();
+  };
+
+  demos.while = (s) => {
+    const pre = $('[data-code]', s);
+    const con = $('[data-con]', s);
+    const state = $('[data-state]', s);
+    const forget = $('[data-forget]', s);
+    const playBtn = $('[data-act="play"]', s);
+    let st;
+    let auto = 0;
+    const code = () => ['let i = 1;', '', 'while (i <= 5) {', '  console.log(`Итерация ${i}`);', forget.classList.contains('on') ? '  // i++;  ← забыли!' : '  i++;', '}', "console.log('Готово!');"];
+    const show = (lineOn, extra = '') => {
+      markLines(pre, [lineOn]);
+      state.innerHTML = `<span>i = ${st.i === null ? '?' : st.i}</span>${extra}<span>итераций: ${st.iter}</span>`;
+    };
+    const reset = () => {
+      stopAuto();
+      st = { i: null, phase: 'init', iter: 0, done: false };
+      con.innerHTML = '';
+      setCode(pre, code());
+      markLines(pre);
+      state.innerHTML = '<span>i = ?</span>';
+    };
+    const step = () => {
+      if (st.done) return false;
+      const print = makePrinter(con);
+      const fg = forget.classList.contains('on');
+      switch (st.phase) {
+        case 'init': st.i = 1; show(0); st.phase = 'cond'; break;
+        case 'cond': {
+          const ok = st.i <= 5;
+          show(2, `<span class="${ok ? 't' : 'f'}">i &lt;= 5 → ${ok}</span>`);
+          st.phase = ok ? 'body' : 'exit';
+          break;
+        }
+        case 'body':
+          st.iter++;
+          print('')(`Итерация ${st.i}`);
+          show(3);
+          if (fg && st.iter >= 8) {
+            print('err')('♾ Бесконечный цикл! i всегда 1. Настоящая вкладка зависла бы — демо остановлено.');
+            st.done = true;
+            stopAuto();
+            return false;
+          }
+          st.phase = fg ? 'cond' : 'inc';
+          break;
+        case 'inc': st.i++; show(4); st.phase = 'cond'; break;
+        case 'exit': print('sys')('Готово!'); show(6); st.done = true; stopAuto(); return false;
+        default: break;
+      }
+      return true;
+    };
+    function stopAuto() { clearInterval(auto); auto = 0; playBtn.textContent = '▶ Авто'; }
+    $('[data-act="step"]', s).addEventListener('click', () => { stopAuto(); step(); });
+    playBtn.addEventListener('click', () => {
+      if (auto) { stopAuto(); return; }
+      if (st.done) reset();
+      playBtn.textContent = '❚❚ Пауза';
+      auto = setInterval(() => { if (!step()) stopAuto(); }, 600);
+      step();
+    });
+    $('[data-act="reset"]', s).addEventListener('click', reset);
+    forget.addEventListener('click', () => { forget.classList.toggle('on'); reset(); });
+    reset();
+    return { leave: stopAuto };
+  };
+
+  demos.for = (s) => {
+    const spans = $$('.formula [data-p]', s);
+    const partsEl = $$('[data-part]', s);
+    const state = $('[data-state]', s);
+    const gauss = $('[data-gauss]', s);
+    let run = 0;
+    const lightUp = (p) => {
+      spans.forEach((x) => x.classList.toggle('on', x.dataset.p === String(p)));
+      partsEl.forEach((x) => x.classList.toggle('on', x.dataset.part === String(p)));
+    };
+    $('[data-act="seq"]', s).addEventListener('click', async () => {
+      const id = ++run;
+      const seq = [[1, 1]];
+      for (let i = 1; i <= 3; i++) seq.push([2, i, true], [4, i], [3, i + 1]);
+      seq.push([2, 4, false]);
+      for (const [p, i, ok] of seq) {
+        if (id !== run) return;
+        lightUp(p);
+        const label = { 1: 'начало', 2: 'условие', 3: 'шаг', 4: 'тело' }[p];
+        state.innerHTML = `<span>${label}</span><span>i = ${i}</span>` + (p === 2 ? `<span class="${ok ? 't' : 'f'}">i &lt;= 3 → ${ok}</span>` : '') + (p === 4 ? `<span class="t">выполняем тело (${i})</span>` : '');
+        await sleep(850);
+      }
+      lightUp(0);
+      state.innerHTML += '<span class="f">выход из цикла</span>';
+    });
+    $('[data-act="gauss"]', s).addEventListener('click', async () => {
+      const id = ++run;
+      let sum = 0;
+      for (let i = 1; i <= 100; i++) {
+        if (id !== run) return;
+        sum += i;
+        gauss.innerHTML = `i = <b class="hl">${i}</b> · sum = <b class="hl">${sum}</b>`;
+        await sleep(i < 10 ? 160 : 22);
+      }
+      gauss.innerHTML = 'sum = <b class="hl">5050</b> ✓ — как у Гаусса';
+      confetti(1400, 820, 120);
+    });
+    return { leave() { run++; lightUp(0); } };
+  };
+
+  demos.breakcont = (s) => {
+    const boxes = (k, n) => { const el = $(`[data-boxes="${k}"]`, s); el.innerHTML = Array.from({ length: n }, (_, i) => `<i>${i + 1}</i>`).join(''); return $$('i', el); };
+    let run = { brk: 0, cnt: 0 };
+    const play = async (k) => {
+      const id = ++run[k];
+      const b = boxes(k, 10);
+      const out = $(`[data-o="${k}"]`, s);
+      out.textContent = '→ ';
+      for (let i = 1; i <= 10; i++) {
+        if (id !== run[k]) return;
+        const el = b[i - 1];
+        el.classList.add('cur');
+        await sleep(420);
+        el.classList.remove('cur');
+        if (k === 'brk' && i === 4) {
+          el.classList.add('stop'); el.textContent = 'break';
+          b.slice(4).forEach((x) => x.classList.add('gone'));
+          out.textContent += '  (цикл прерван)';
+          return;
+        }
+        if (k === 'cnt' && i % 2 === 0) { el.classList.add('skip'); continue; }
+        el.classList.add('ok');
+        out.textContent += i + ' ';
+      }
+    };
+    $('[data-act="brk"]', s).addEventListener('click', () => play('brk'));
+    $('[data-act="cnt"]', s).addEventListener('click', () => play('cnt'));
+    const reset = () => { run.brk++; run.cnt++; boxes('brk', 10); boxes('cnt', 10); $$('[data-o]', s).forEach((o) => { o.textContent = '→ '; }); };
+    reset();
+    return { enter: reset };
+  };
+
+  demos.labels = (s) => {
+    const grid = $('[data-grid]', s);
+    const pre = $('[data-code]', s);
+    const tog = $('[data-lbl]', s);
+    const out = $('[data-o]', s);
+    let run = 0;
+    grid.innerHTML = Array.from({ length: 81 }, (_, k) => `<i title="${Math.floor(k / 9) + 1} × ${k % 9 + 1}">${(Math.floor(k / 9) + 1) * (k % 9 + 1)}</i>`).join('');
+    const cells = $$('i', grid);
+    const code = (lbl) => [lbl ? 'outer:' : '// метки нет', 'for (let i = 1; i <= 9; i++) {', '  for (let j = 1; j <= 9; j++) {', '    if (i * j === 12) {', '      console.log(i, j);', lbl ? '      break outer;' : '      break;', '    }', '  }', '}'];
+    const reset = () => { run++; cells.forEach((c) => { c.className = ''; }); setCode(pre, code(tog.classList.contains('on'))); out.textContent = 'Найдено: —'; };
+    tog.addEventListener('click', () => { tog.classList.toggle('on'); reset(); });
+    $('[data-act="run"]', s).addEventListener('click', async () => {
+      reset();
+      const id = run;
+      const lbl = tog.classList.contains('on');
+      const found = [];
+      outer:
+      for (let i = 1; i <= 9; i++) {
+        for (let j = 1; j <= 9; j++) {
+          if (id !== run) return;
+          const c = cells[(i - 1) * 9 + (j - 1)];
+          c.classList.add('v');
+          markLines(pre, [3]);
+          await sleep(45);
+          if (i * j === 12) {
+            c.classList.add('hit');
+            found.push(`${i} × ${j}`);
+            out.textContent = 'Найдено: ' + found.join(', ');
+            markLines(pre, [4, 5]);
+            await sleep(700);
+            if (lbl) { cells.slice((i - 1) * 9 + j).forEach((x) => x.classList.add('cut')); break outer; }
+            cells.slice((i - 1) * 9 + j, i * 9).forEach((x) => x.classList.add('cut'));
+            break;
+          }
+        }
+      }
+      markLines(pre);
+      out.textContent = `Найдено: ${found.join(', ')}${lbl ? ' · стоп!' : ''}`;
+    });
+    reset();
+    return { leave() { run++; } };
+  };
+
+  // Примеры того, как должна работать программа студента (код не показывается)
+  demos.receipt = (s) => {
+    $('[data-demo-run]', s).addEventListener('click', () => {
+      const ask = (q, def) => Number(prompt(q, def));
+      const coffee = ask('Цена кофе, AZN:', '3.5');
+      const cups = ask('Сколько чашек?', '2');
+      const dessert = ask('Цена десерта, AZN:', '4');
+      const pieces = ask('Сколько десертов?', '1');
+      const tip = ask('Чаевые, %:', '10');
+      const friends = ask('Сколько друзей делят счёт?', '2');
+      const sum = coffee * cups + dessert * pieces;
+      const total = sum * (1 + tip / 100);
+      alert(`☕ Кофе: ${cups} × ${coffee.toFixed(2)} = ${(coffee * cups).toFixed(2)} AZN\n🍰 Десерт: ${pieces} × ${dessert.toFixed(2)} = ${(dessert * pieces).toFixed(2)} AZN\nЧаевые ${tip}%: ${(total - sum).toFixed(2)} AZN\nИтого: ${total.toFixed(2)} AZN · с каждого: ${(total / friends).toFixed(2)} AZN`);
+    });
+  };
+
+  demos.game = (s) => {
+    $('[data-demo-run]', s).addEventListener('click', () => {
+      const secret = Math.floor(Math.random() * 100) + 1;
+      let tries = 0;
+      while (true) {
+        const a = prompt(tries ? `Попытка ${tries + 1}. Ваше число (1–100):` : 'Я загадал число от 1 до 100. Угадайте!');
+        if (a === null) { alert(`Игра прервана. Было загадано ${secret}`); return; }
+        const n = Number(a);
+        if (Number.isNaN(n) || n < 1 || n > 100) { alert('Нужно число от 1 до 100 — попытка не считается'); continue; }
+        tries++;
+        if (n === secret) break;
+        alert(n < secret ? 'Больше ↑' : 'Меньше ↓');
+      }
+      alert(`🎉 Угадали! Это было ${secret}. Попыток: ${tries}. ${tries <= 5 ? 'Отлично!' : 'Неплохо'}`);
+      confetti(960, 400, 220);
+    });
+  };
+
+  /* ---------- урок 2: функции ---------- */
+  const bump = (el) => { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); };
+
+  demos.juice = (s) => {
+    const fruits = [['🍎', true], ['🍊', true], ['🍋', true], ['🍓', true], ['🍉', true], ['🥕', true], ['🧦', false]];
+    const box = $('[data-jbox]', s);
+    const jin = $('[data-jin]', s);
+    const jout = $('[data-jout]', s);
+    const res = $('[data-jres]', s);
+    const cnt = $('[data-juice-count]', s);
+    let made = 0;
+    let busy = false;
+    fruits.forEach(([f, ok]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip';
+      b.style.fontSize = '44px';
+      b.textContent = f;
+      b.addEventListener('click', async () => {
+        if (busy) return;
+        busy = true;
+        jout.classList.remove('on');
+        jin.textContent = f;
+        jin.animate([{ transform: 'translateX(-40px)', opacity: 1 }, { transform: 'translateX(120px) scale(.3)', opacity: 0 }], { duration: 600, easing: 'ease-in', fill: 'forwards' });
+        await sleep(600);
+        box.animate([{ transform: 'none' }, { transform: 'translateX(-8px) rotate(-1deg)' }, { transform: 'translateX(8px) rotate(1deg)' }, { transform: 'none' }], { duration: 160, iterations: 4 });
+        await sleep(700);
+        $('.emo-big', jout).textContent = ok ? '🧃' : '💥';
+        res.textContent = ok ? `'сок из ${f}'` : 'TypeError: это не фрукт 🤢';
+        if (ok) { made++; cnt.textContent = made; bump(cnt.parentElement); }
+        jout.classList.add('on');
+        jin.getAnimations().forEach((a) => a.cancel());
+        jin.textContent = '?';
+        busy = false;
+      });
+      $('[data-fruits]', s).appendChild(b);
+    });
+  };
+
+  demos.anatomy = (s) => {
+    const segs = $$('.seg', s);
+    const chips = $$('[data-legend] .chip', s);
+    let k = 0;
+    const show = (n) => {
+      segs.forEach((x) => x.classList.toggle('on', x.dataset.s === String(n)));
+      chips.forEach((x) => x.classList.toggle('on', x.dataset.s === String(n)));
+    };
+    chips.forEach((c) => c.addEventListener('click', () => { stopAll(); show(c.dataset.s); }));
+    return { enter() { k = 0; every(() => { k = k % 6 + 1; show(k); }, 1400); }, leave() { show(0); } };
+  };
+
+  demos.callb = (s) => {
+    const a1 = $('[data-a1]', s);
+    const a2 = $('[data-a2]', s);
+    const map = $('[data-map]', s);
+    const res = $('[data-res]', s);
+    function greet(name, age = 18) { return `Привет, ${name}! Тебе ${age}`; }
+    const go = () => {
+      const args = [];
+      try {
+        if (a1.value.trim()) args.push(evalExpr(a1.value));
+        if (a2.value.trim()) { if (!args.length) args.push(undefined); args.push(evalExpr(a2.value)); }
+      } catch (e) { res.textContent = `${e.name}: ${e.message}`; map.innerHTML = ''; return; }
+      const given = args.length > 1 && args[1] !== undefined;
+      map.innerHTML = `<span class="${args[0] === undefined ? 'f' : ''}">name = ${esc(fmt(args[0], false))}</span><span class="${given ? '' : 't'}">age = ${esc(fmt(given ? args[1] : 18, false))}${given ? '' : ' · по умолчанию'}</span>`;
+      res.textContent = '→ ' + fmt(greet(...args), false);
+      bump(res);
+    };
+    [a1, a2].forEach((el) => el.addEventListener('input', go));
+    $$('[data-pre]', s).forEach((c) => c.addEventListener('click', () => { [a1.value, a2.value] = c.dataset.pre.split('|'); go(); }));
+    go();
+  };
+
+  demos.arrowm = (s) => {
+    const pre = $('[data-arrow]', s);
+    const cap = $('[data-arrow-cap]', s);
+    const len = $('[data-arrow-len]', s);
+    const steps = [
+      ['function sum(a, b) {\n  return a + b;\n}', 'Обычная функция. Нажмите «Сжать» 🗜'],
+      ['const sum = function (a, b) {\n  return a + b;\n};', 'Шаг 1: функция как значение переменной (expression)'],
+      ['const sum = (a, b) => {\n  return a + b;\n};', 'Шаг 2: вместо слова function — стрелка =>'],
+      ['const sum = (a, b) => a + b;', 'Шаг 3: одно выражение — убираем { } и return'],
+      ['const double = n => n * 2;', 'Бонус: один параметр — можно без скобок 🎉'],
+    ];
+    let k = 0;
+    const show = () => {
+      setCode(pre, steps[k][0]);
+      cap.textContent = steps[k][1];
+      len.textContent = `${steps[k][0].replace(/\s+/g, ' ').length} символов`;
+      bump(len);
+    };
+    $('[data-act="next"]', s).addEventListener('click', async () => {
+      if (k >= steps.length - 1) return;
+      pre.style.transform = 'scaleX(.85) scaleY(.9)';
+      await sleep(250);
+      k++;
+      show();
+      pre.style.transform = '';
+      bump(pre);
+      if (k === steps.length - 1) confetti(1300, 450, 120);
+    });
+    $('[data-act="reset"]', s).addEventListener('click', () => { k = 0; show(); });
+    show();
+  };
+
+  demos.scope = (s) => {
+    const zones = { global: $('[data-z="global"]', s), fn: $('[data-z="fn"]', s), block: $('[data-z="block"]', s) };
+    const vars = { global: ['school', "'IT Step'"], fn: ['topic', "'функции'"], block: ['secret', "'🤫'"] };
+    const names = { global: '🌍 global', fn: '📦 function', block: '🧱 if-блок' };
+    const order = ['block', 'fn', 'global'];
+    const con = $('[data-con]', s);
+    let run = 0;
+    const clear = () => Object.values(zones).forEach((z) => z.classList.remove('look', 'found', 'miss'));
+    $$('[data-q]', s).forEach((b) => b.addEventListener('click', async () => {
+      const id = ++run;
+      const [from, name] = b.dataset.q.split('|');
+      clear();
+      con.innerHTML = '';
+      const print = makePrinter(con);
+      print('sys')(`Ищем ${name} — начинаем с: ${names[from]}`);
+      for (const z of order.slice(order.indexOf(from))) {
+        if (id !== run) return;
+        zones[z].classList.add('look');
+        await sleep(700);
+        if (id !== run) return;
+        zones[z].classList.remove('look');
+        if (vars[z][0] === name) {
+          zones[z].classList.add('found');
+          print('')(`✓ нашли в ${names[z]}: ${name} = ${vars[z][1]}`);
+          return;
+        }
+        zones[z].classList.add('miss');
+        print('')(`… в ${names[z]} нет`);
+        await sleep(300);
+        if (id !== run) return;
+        zones[z].classList.remove('miss');
+      }
+      print('err')(`ReferenceError: ${name} is not defined — внутрь коробок заглянуть нельзя`);
+    }));
+    return { enter() { clear(); con.innerHTML = ''; }, leave() { run++; } };
+  };
+
+  const chip = (text) => { const c = document.createElement('span'); c.className = 'chip'; c.textContent = text; return c; };
+
+  demos.rest = (s) => {
+    const inp = $('[data-args]', s);
+    const chips = $('[data-chips]', s);
+    const box = $('[data-box]', s);
+    const out = $('[data-out]', s);
+    let run = 0;
+    $('[data-act="go"]', s).addEventListener('click', async () => {
+      const id = ++run;
+      const nums = inp.value.split(',').map((x) => x.trim()).filter(Boolean).map(Number);
+      chips.innerHTML = '';
+      box.innerHTML = '<span class="mono s26">numbers = [</span>';
+      out.textContent = '';
+      nums.forEach((n) => chips.appendChild(chip(fmt(n, false))));
+      await sleep(500);
+      for (let i = 0; i < nums.length; i++) {
+        if (id !== run) return;
+        chips.firstElementChild.remove();
+        box.appendChild(chip(fmt(nums[i], false)));
+        await sleep(380);
+      }
+      box.insertAdjacentHTML('beforeend', '<span class="mono s26">]</span>');
+      let total = 0;
+      for (let i = 0; i < nums.length; i++) total += nums[i];
+      out.textContent = `numbers.length = ${nums.length} · sum → ${fmt(total, false)}`;
+      bump(out);
+    });
+  };
+
+  demos.spread = (s) => {
+    const arr = [7, 12, 9];
+    const chips = $('[data-chips]', s);
+    const out = $('[data-out]', s);
+    const box = $('[data-arr]', s);
+    let run = 0;
+    $('[data-act="go"]', s).addEventListener('click', async () => {
+      const id = ++run;
+      chips.innerHTML = '';
+      out.textContent = '';
+      box.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(.95)' }, { transform: 'scale(1)' }], { duration: 400 });
+      await sleep(350);
+      for (const n of arr) {
+        if (id !== run) return;
+        chips.appendChild(chip(String(n)));
+        await sleep(300);
+      }
+      out.textContent = `Math.max(${arr.join(', ')}) → ${Math.max(...arr)} ✓`;
+      bump(out);
+    });
+    $('[data-act="bad"]', s).addEventListener('click', () => {
+      run++;
+      chips.innerHTML = '';
+      chips.appendChild(chip(`[${arr.join(', ')}]`));
+      out.textContent = `Math.max([${arr.join(', ')}]) → ${Math.max(arr)} 😕`;
+      bump(out);
+      box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    });
+  };
+
+  demos.stack = (s) => {
+    const range = $('[data-n]', s);
+    const nv = $('[data-n-v]', s);
+    const st = $('[data-stack]', s);
+    const out = $('[data-out]', s);
+    let run = 0;
+    const reset = () => { run++; st.innerHTML = ''; out.textContent = ''; nv.textContent = range.value; };
+    range.addEventListener('input', reset);
+    $('[data-act="reset"]', s).addEventListener('click', reset);
+    $('[data-act="play"]', s).addEventListener('click', async () => {
+      reset();
+      const id = run;
+      const n = +range.value;
+      for (let k = n; k >= 1; k--) {
+        if (id !== run) return;
+        const f = document.createElement('div');
+        f.className = 'frame';
+        f.innerHTML = k > 1 ? `factorial(${k}) → ${k} * factorial(${k - 1}) <i>ждёт…</i>` : 'factorial(1) → <b>1</b> <i>базовый случай!</i>';
+        st.appendChild(f);
+        await sleep(750);
+      }
+      let val = 1;
+      for (let k = 1; k <= n; k++) {
+        if (id !== run) return;
+        const f = st.lastElementChild;
+        val *= k;
+        f.classList.add('ret');
+        f.innerHTML = `factorial(${k}) вернул <b>${val}</b>`;
+        await sleep(650);
+        f.classList.add('pop');
+        await sleep(330);
+        f.remove();
+      }
+      out.textContent = `factorial(${n}) = ${val} ✓`;
+      bump(out);
+    });
+    return { enter: reset, leave() { run++; } };
+  };
+
+  demos.piggy = (s) => {
+    const owners = ['Аня', 'Вова', 'Лейла', 'Мурад'];
+    const wrap = $('[data-banks]', s);
+    const add = $('[data-act="new"]', s);
+    function createPiggyBank(owner) {
+      let money = 0;
+      return function (coins) {
+        money += coins;
+        return `${owner}: ${money} AZN`;
+      };
+    }
+    add.addEventListener('click', () => {
+      const i = wrap.children.length;
+      if (i >= owners.length) return;
+      const bank = createPiggyBank(owners[i]);
+      const card = document.createElement('div');
+      card.className = 'card bank';
+      card.innerHTML = `<p class="pig">🐷</p><h3>${owners[i]}</h3><p class="mono s28" data-m>0 AZN</p><div class="chips" style="justify-content:center"></div><p class="mono s24 muted" data-call>const bank${i + 1} = createPiggyBank('${owners[i]}');</p>`;
+      [1, 5, 10].forEach((c) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = `+${c} 🪙`;
+        b.addEventListener('click', () => {
+          const r = bank(c);
+          $('[data-m]', card).textContent = r.split(': ')[1];
+          $('[data-call]', card).textContent = `bank${i + 1}(${c}) → '${r}'`;
+          $('.pig', card).animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-14deg) scale(1.15)' }, { transform: 'rotate(10deg)' }, { transform: 'rotate(0)' }], { duration: 450 });
+          bump($('[data-m]', card));
+        });
+        $('.chips', card).appendChild(b);
+      });
+      wrap.appendChild(card);
+      if (wrap.children.length >= owners.length) add.disabled = true;
+    });
+  };
+
+  demos.finish = (s) => {
+    $('[data-thanks]', s).addEventListener('click', () => alert('Спасибо! Вопросы?'));
+    return { enter() { setTimeout(() => { if (slides[cur] === s) { confetti(500, 300, 160); setTimeout(() => confetti(1400, 300, 160), 350); } }, 700); } };
+  };
+
+  /* =========================================================
+     Сборка слайдов
+     ========================================================= */
+  $$('pre.code:not([data-code]):not([data-anat])').forEach((pre) => { pre.innerHTML = hlLines(pre.textContent.replace(/^\n/, '')); });
+  $$('.runner').forEach(initRunner);
+  $$('.expr').forEach(initExpr);
+  slides.forEach((s, i) => {
+    const d = s.dataset.demo;
+    s._demo = (d && demos[d] && demos[d](s)) || {};
+    if (!s.hasAttribute('data-nofoot')) {
+      const f = document.createElement('div');
+      f.className = 'footer';
+      f.innerHTML = `<span>JavaScript · ${esc((document.title.match(/Урок \d+/) || ['Урок'])[0])} · ${esc(s.dataset.sec || '')}</span><span>${i + 1} / ${total}</span>`;
+      s.appendChild(f);
+    }
+    $$('.a', s).forEach((el, k) => el.style.setProperty('--i', k));
+  });
+
+  /* =========================================================
+     Навигация
+     ========================================================= */
+  const prog = document.getElementById('prog');
+  const notes = document.getElementById('notes');
+  const overview = document.getElementById('overview');
+  const help = document.getElementById('help');
+  const titleOf = (s) => { const h = s.querySelector('h1, h2'); return h ? h.textContent.trim() : '—'; };
+
+  function go(n) {
+    n = Math.max(0, Math.min(total - 1, n));
+    if (n === cur) return;
+    const prev = slides[cur];
+    if (prev) {
+      prev.classList.remove('active');
+      if (prev._demo.leave) prev._demo.leave();
+    }
+    stopAll();
+    zoom.classList.remove('on');
+    if (document.activeElement && stage.contains(document.activeElement)) document.activeElement.blur();
+    slides.forEach((s, i) => s.classList.toggle('past', i < n));
+    cur = n;
+    const s = slides[n];
+    s.classList.add('active');
+    if (s._demo.enter) s._demo.enter();
+    stage.classList.toggle('on-lime', s.classList.contains('lime'));
+    prog.style.width = ((n + 1) / total * 100) + '%';
+    const aside = $('aside.notes', s);
+    notes.innerHTML = `<b>Слайд ${n + 1} / ${total} · ${esc(titleOf(s))}</b><br>${aside ? aside.innerHTML : 'Заметок нет.'}`;
+    $$('#overview button').forEach((b, i) => b.classList.toggle('cur', i === n));
+    history.replaceState(null, '', '#' + (n + 1));
+  }
+
+  const list = $('#overview .list');
+  slides.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = `<b>${i + 1} · ${esc(s.dataset.sec || '')}</b>${esc(titleOf(s))}`;
+    b.addEventListener('click', () => { overview.classList.remove('on'); go(i); });
+    list.appendChild(b);
+  });
+
+  function fit() {
+    scale = Math.min(innerWidth / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  addEventListener('resize', fit);
+  fit();
+
+  document.addEventListener('keydown', (e) => {
+    const t = e.target;
+    const tag = t && t.tagName;
+    const typing = tag === 'TEXTAREA' || (tag === 'INPUT' && t.type !== 'range');
+    if (e.key === 'Escape') {
+      zoom.classList.remove('on'); overview.classList.remove('on'); help.classList.remove('on'); alarm.className = '';
+      if (t && t.blur) t.blur();
+      return;
+    }
+    if (typing) return;
+    if (tag === 'INPUT' && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    if (tag === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+    switch (e.key) {
+      case 'ArrowRight': case 'PageDown': case ' ': e.preventDefault(); go(cur + 1); break;
+      case 'ArrowLeft': case 'PageUp': e.preventDefault(); go(cur - 1); break;
+      case 'Home': go(0); break;
+      case 'End': go(total - 1); break;
+      case 'f': case 'F': case 'а': case 'А':
+        if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+        break;
+      case 'n': case 'N': case 'т': case 'Т': notes.classList.toggle('on'); break;
+      case 'o': case 'O': case 'щ': case 'Щ': overview.classList.toggle('on'); help.classList.remove('on'); break;
+      case '?': case ',': help.classList.toggle('on'); overview.classList.remove('on'); break;
+      case 'r': case 'R': case 'к': case 'К': if (slides[cur]._restart) slides[cur]._restart(); break;
+      case 'p': case 'P': case 'з': case 'З': raise('phone'); break;
+      case 's': case 'S': case 'ы': case 'Ы': raise('shh'); break;
+      case 'm': case 'M': case 'ь': case 'Ь': raise('love'); break;
+      default: break;
+    }
+  });
+  $$('[data-nav]').forEach((b) => b.addEventListener('click', () => go(cur + (b.dataset.nav === 'next' ? 1 : -1))));
+  [overview, help].forEach((o) => o.addEventListener('click', (e) => { if (e.target === o) o.classList.remove('on'); }));
+
+  let touchX = null;
+  stage.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 80) go(cur + (dx < 0 ? 1 : -1));
+    touchX = null;
+  });
+
+  let moveTimer = 0;
+  addEventListener('mousemove', () => { document.body.classList.add('moving'); clearTimeout(moveTimer); moveTimer = setTimeout(() => document.body.classList.remove('moving'), 1500); });
+  setTimeout(() => { const h = document.getElementById('hint'); if (h) h.style.opacity = '0'; }, 5000);
+
+  window.lesson = {go: (n) => go(n), slides, current: () => cur};
+  const start = parseInt(location.hash.slice(1), 10);
+  go(Number.isFinite(start) ? start - 1 : 0);
+})();
+</script>
+<script>window.LEARN_JS_LESSON='02';</script><script src="/lesson-bridge.js"></script></body>
+</html>
