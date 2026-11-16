@@ -25,6 +25,15 @@ async function touch(room,playerToken){const hash=digest(playerToken);if(local()
 async function roster(room,round){let people,answers;if(local()){({people,answers}=await transaction(db=>({people:db[room]?.players||{},answers:db[room]?.answers[round]||{}})));}else{const [p,a]=await Promise.all([redis(['HGETALL',roomKey(room)+':players']),redis(['HGETALL',roomKey(room)+':answers:'+round])]);people={};answers={};for(let i=0;i<p.length;i+=2)people[p[i]]=JSON.parse(p[i+1]);for(let i=0;i<a.length;i+=2)answers[a[i]]=Number(a[i+1]);}return Object.entries(people).map(([hash,p])=>({number:p.number,name:p.name,online:Date.now()-p.lastSeen<15000,answer:answers[hash]===undefined?null:answers[hash]})).sort((a,b)=>a.number-b.number);}
 async function vote(room,playerToken,choice,round){if(local())return transaction(db=>{const r=db[room];if(!r||r.phase!=='open'||Date.now()>=r.deadline||r.round!==round)fail('Голосование закрыто или начался новый раунд.',409);const p=digest(playerToken);if(!r.players[p])fail('Войдите в комнату.',403);const a=r.answers[round]||(r.answers[round]={});if(a[p]!==undefined)fail('Ваш ответ уже принят.',409);a[p]=choice;return true;});const result=await redis(['EVAL',`local raw=redis.call('GET',KEYS[1]);if not raw then return -1 end;local s=cjson.decode(raw);local t=redis.call('TIME');local now=tonumber(t[1])*1000+tonumber(t[2])/1000;if s.phase~='open' or now>=s.deadline or s.round~=ARGV[3] then return -1 end;if redis.call('HEXISTS',KEYS[2],ARGV[1])==0 then return -2 end;local ok=redis.call('HSETNX',KEYS[3],ARGV[1],ARGV[2]);redis.call('EXPIRE',KEYS[3],ARGV[4]);return ok`,3,roomKey(room),roomKey(room)+':players',roomKey(room)+':answers:'+round,digest(playerToken),choice,round,TTL]);if(result===-2)fail('Войдите в комнату.',403);if(result===-1)fail('Голосование закрыто или начался новый раунд.',409);if(result===0)fail('Ваш ответ уже принят.',409);return true;}
 async function readVotes(room,round,playerToken){if(local())return transaction(db=>{const r=db[room];return {players:Object.keys(r?.players||{}).length,answers:r?.answers[round]||{},own:r?.answers[round]?.[digest(playerToken||'')]};});const [players,raw,own]=await Promise.all([redis(['HLEN',roomKey(room)+':players']),redis(['HVALS',roomKey(room)+':answers:'+round]),playerToken?redis(['HGET',roomKey(room)+':answers:'+round,digest(playerToken)]):Promise.resolve(null)]);return {players,answers:raw||[],own:own===null?undefined:Number(own)};}
+async function leaderboard(room,state){
+ let people;
+ if(local())people=await transaction(db=>db[room]?.players||{});
+ else{const raw=await redis(['HGETALL',roomKey(room)+':players']);people={};for(let i=0;i<raw.length;i+=2)people[raw[i]]=JSON.parse(raw[i+1]);}
+ const rounds=await Promise.all(Object.entries(state.rounds||{}).map(async([quiz,round])=>{let answers;if(local())answers=await transaction(db=>db[room]?.answers[round]||{});else{const raw=await redis(['HGETALL',roomKey(room)+':answers:'+round]);answers={};for(let i=0;i<raw.length;i+=2)answers[raw[i]]=Number(raw[i+1]);}return{quiz:Number(quiz),answers};}));
+ const rows=Object.entries(people).map(([hash,person])=>{let correct=0,answered=0;for(const r of rounds)if(Object.hasOwn(r.answers,hash)){answered++;if(Number(r.answers[hash])===quizzes[r.quiz].correct)correct++;}return{number:person.number,name:person.name,correct,answered,total:rounds.length};});
+ rows.sort((a,b)=>b.correct-a.correct||b.answered-a.answered||a.number-b.number);
+ rows.forEach((r,i)=>r.place=i&&r.correct===rows[i-1].correct&&r.answered===rows[i-1].answered?rows[i-1].place:i+1);return rows;
+}
 function publicQuiz(q,revealed){return q?{question:q.question,code:q.code,options:q.options,kind:q.kind||'quiz',number:q.number,...(revealed?{correct:q.correct,why:q.why}:{})}:null;}
 async function handler(req,res){res.setHeader('Cache-Control','no-store');try{
  if(req.method!=='POST')fail('Используйте POST.',405);
@@ -33,7 +42,7 @@ async function handler(req,res){res.setHeader('Cache-Control','no-store');try{
  const {action}=body;
  if(action==='create'){
   // Создание комнаты само по себе не публикует никакие данные преподавателя.
-  const teacherToken=token();let room,state;let created=false;for(let i=0;i<5&&!created;i++){room=String(crypto.randomInt(100000,1000000));state={teacherHash:digest(teacherToken),quiz:-1,phase:'lobby',deadline:0,round:token().slice(0,12)};created=await createRoom(room,state);}if(!created)fail('Не удалось создать комнату. Повторите.',503);
+  const teacherToken=token();let room,state;let created=false;for(let i=0;i<5&&!created;i++){room=String(crypto.randomInt(100000,1000000));state={teacherHash:digest(teacherToken),quiz:-1,phase:'lobby',deadline:0,rounds:{},round:token().slice(0,12)};created=await createRoom(room,state);}if(!created)fail('Не удалось создать комнату. Повторите.',503);
   const proto=process.env.VERCEL?'https':req.socket?.encrypted?'https':'http';const origin=proto+'://'+req.headers.host;const joinUrl=origin+'/join.html?room='+room;return res.status(200).json({room,teacherToken,joinUrl,qr:await QRCode.toDataURL(joinUrl,{width:360,margin:3,errorCorrectionLevel:'M'})});
  }
  const room=String(body.room||'');if(!/^\d{6}$/.test(room))fail('Нужен шестизначный код комнаты.');
@@ -44,7 +53,7 @@ async function handler(req,res){res.setHeader('Cache-Control','no-store');try{
   if(state.phase==='ended')fail('Сессия завершена.',410);
   if(action==='end'){await updateRoom(room,{phase:'ended'});return res.status(200).json({ok:true});}
   const quiz=body.quiz;if(!Number.isInteger(quiz)||!quizzes[quiz])fail('Неизвестный квиз.');
-  if(action==='start')await updateRoom(room,{quiz,phase:'open',deadline:Date.now()+25000,round:token().slice(0,12)});
+  if(action==='start'){const round=token().slice(0,12);await updateRoom(room,{quiz,phase:'open',deadline:Date.now()+25000,round,rounds:{...(state.rounds||{}),[quiz]:round}});}
   else {if(quiz!==state.quiz)fail('Сначала запустите этот квиз.',409);await updateRoom(room,{phase:'revealed'});}
   return res.status(200).json({ok:true});
  }
@@ -52,9 +61,9 @@ async function handler(req,res){res.setHeader('Cache-Control','no-store');try{
  if(!isTeacher&&(!body.playerToken||!await playerNumber(room,body.playerToken)))fail('Войдите в комнату.',403);
  if(action==='vote'){if(!Number.isInteger(body.choice)||body.choice<0||body.choice>3)fail('Выберите A, B, C или D.');if(typeof body.round!=='string')fail('Обновите текущий вопрос.');await vote(room,body.playerToken,body.choice,body.round);return res.status(200).json({ok:true});}
  if(action!=='status')fail('Неизвестное действие.');
- if(!isTeacher)await touch(room,body.playerToken);
+ // Присутствие не пишем при каждом опросе: результаты нужны только в конце.
  const votes=await readVotes(room,state.round,body.playerToken);const counts=[0,0,0,0];for(const v of Object.values(votes.answers))counts[Number(v)]++;
  const phase=state.phase==='open'&&Date.now()>=state.deadline?'closed':state.phase;
- return res.status(200).json({phase,quiz:state.quiz,round:state.round,deadline:state.deadline,serverNow:Date.now(),players:votes.players,...(isTeacher||phase==='revealed'?{counts}:{count:counts.reduce((a,b)=>a+b,0)}),roster:isTeacher?await roster(room,state.round):undefined,question:publicQuiz(quizzes[state.quiz],phase==='revealed'),own:votes.own===undefined?null:votes.own});
+ return res.status(200).json({phase,quiz:state.quiz,round:state.round,deadline:state.deadline,serverNow:Date.now(),players:votes.players,...(isTeacher||phase==='revealed'?{counts}:{count:counts.reduce((a,b)=>a+b,0)}),leaderboard:phase==='ended'?await leaderboard(room,state):undefined,question:publicQuiz(quizzes[state.quiz],phase==='revealed'),own:votes.own===undefined?null:votes.own});
  }catch(error){res.status(error.status||500).json({error:error.status?error.message:'Временная ошибка сервера. Повторите запрос.'});}}
 module.exports=handler;
